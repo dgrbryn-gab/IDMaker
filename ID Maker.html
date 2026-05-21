@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student ID Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green-dark:#1a5e23;
+  --green-mid:#2e7d32;
+  --green-light:#43a047;
+  --green-pale:#e8f5e9;
+  --gold:#f9c30a;
+  --gold-light:#fff176;
+  --red-school:#c0392b;
+  --white:#ffffff;
+}
+body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 50%,#a5d6a7 100%);min-height:100vh;padding:16px;}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,var(--green-dark) 0%,var(--green-mid) 60%,var(--green-light) 100%);
+  color:white;padding:16px 24px;border-radius:14px;margin-bottom:18px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 6px 24px rgba(27,94,32,.35);
+  border-bottom:4px solid var(--gold);
+}
+.header-icon{width:48px;height:48px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.header h1{font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:var(--gold);letter-spacing:.5px;line-height:1.2;}
+.header p{font-size:11.5px;opacity:.88;margin-top:3px;font-weight:600;}
+
+/* ===== LAYOUT ===== */
+.main{display:flex;gap:14px;flex-wrap:wrap;}
+.form-panel{flex:1 1 290px;background:white;border-radius:14px;border:1px solid #c8e6c9;padding:14px;max-height:640px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.preview-panel{flex:2 1 420px;}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tab-btn{
+  flex:1;padding:9px 6px;font-size:11.5px;font-weight:700;border-radius:8px;cursor:pointer;
+  border:2px solid #ddd;background:white;color:#666;transition:all .2s;
+  font-family:'Montserrat',sans-serif;letter-spacing:.3px;
+}
+.tab-btn.active{background:var(--green-dark);color:white;border-color:var(--green-dark);box-shadow:0 3px 10px rgba(27,94,32,.3);}
+.tab-btn:hover:not(.active){border-color:var(--green-mid);color:var(--green-mid);}
+.tab-settings{background:#fff8e1!important;color:#e65100!important;border-color:#ffcc02!important;font-size:11px!important;}
+.tab-settings.active{background:#ff8f00!important;color:white!important;border-color:#ff8f00!important;}
+.tab-design{background:#f3e5f5!important;color:#6a1b9a!important;border-color:#ce93d8!important;font-size:11px!important;}
+.tab-design.active{background:#7b1fa2!important;color:white!important;border-color:#7b1fa2!important;}
+/* Color swatch */
+.swatch-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0;}
+.swatch.active,.swatch:hover{border-color:#333;transform:scale(1.15);}
+.pattern-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.pattern-btn{padding:5px 8px;font-size:10px;font-weight:700;border-radius:6px;cursor:pointer;border:1.5px solid #ddd;background:white;color:#555;transition:all .15s;white-space:nowrap;}
+.pattern-btn.active,.pattern-btn:hover{border-color:#7b1fa2;color:#7b1fa2;background:#f3e5f5;}
+.range-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.range-row input[type=range]{flex:1;accent-color:#7b1fa2;}
+.range-val{font-size:11px;font-weight:700;color:#6a1b9a;min-width:28px;text-align:right;}
+
+/* ===== FORM FIELDS ===== */
+.field{margin-bottom:9px;}
+.field label{font-size:10px;color:#555;font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}
+.field input{width:100%;padding:7px 10px;font-size:12px;border:1.5px solid #ddd;border-radius:7px;outline:none;font-family:'Open Sans',sans-serif;transition:all .18s;color:#333;}
+.field input:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(46,125,50,.12);}
+.field input[type=file]{padding:5px 8px;font-size:11px;background:#f9f9f9;cursor:pointer;}
+
+.section-divider{margin:10px 0 8px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--green-dark);border-bottom:2px solid var(--green-pale);padding-bottom:4px;font-family:'Montserrat',sans-serif;}
+
+/* ===== SIDE TABS ===== */
+.side-tabs{display:flex;gap:8px;margin-bottom:10px;}
+.side-btn{
+  flex:1;padding:9px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;
+  border:2px solid #ddd;background:white;color:#666;transition:all .2s;
+  font-family:'Montserrat',sans-serif;
+}
+.side-btn.active{background:var(--green-dark);color:white;border-color:var(--green-dark);box-shadow:0 3px 10px rgba(27,94,32,.3);}
+
+/* ===== CARDS AREA ===== */
+.cards-area{
+  background:linear-gradient(135deg,#b2dfdb 0%,#a5d6a7 100%);
+  border-radius:14px;padding:20px;display:flex;gap:20px;flex-wrap:wrap;
+  justify-content:center;min-height:380px;margin-bottom:12px;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.1);
+  border:1px solid #81c784;
+}
+.card-wrap{text-align:center;}
+.card-label{
+  font-size:10px;font-weight:800;color:var(--green-dark);margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:.8px;font-family:'Montserrat',sans-serif;
+  background:rgba(255,255,255,.6);border-radius:20px;padding:3px 10px;display:inline-block;
+}
+
+/* ===== BUTTONS ===== */
+.export-btns{display:flex;gap:10px;margin-bottom:10px;}
+.btn-print,.btn-pdf{
+  padding:11px 0;font-size:13px;font-weight:700;border-radius:9px;cursor:pointer;
+  border:none;color:white;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .2s;font-family:'Montserrat',sans-serif;letter-spacing:.3px;
+}
+.btn-print{background:linear-gradient(135deg,var(--green-dark),var(--green-light));box-shadow:0 4px 12px rgba(27,94,32,.3);}
+.btn-pdf{background:linear-gradient(135deg,#c62828,#e53935);box-shadow:0 4px 12px rgba(198,40,40,.3);}
+.btn-print:hover{background:linear-gradient(135deg,#145218,var(--green-mid));transform:translateY(-1px);}
+.btn-pdf:hover{background:linear-gradient(135deg,#a31515,#c62828);transform:translateY(-1px);}
+.btn-pdf:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* ===== TIP ===== */
+.tip{padding:10px 13px;background:#fff8e1;border-radius:9px;border-left:4px solid var(--gold);font-size:11px;color:#6d4c41;line-height:1.5;}
+
+/* ===== SCROLLBAR ===== */
+.form-panel::-webkit-scrollbar{width:5px;}
+.form-panel::-webkit-scrollbar-track{background:#f0f0f0;border-radius:10px;}
+.form-panel::-webkit-scrollbar-thumb{background:#a5d6a7;border-radius:10px;}
+
+/* ===== ID CARD FRONT ===== */
+/* Designed entirely inline in JS for export compatibility */
+
+/* ===== PRINT ===== */
+@page {
+  margin: 5mm;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;-webkit-margin-before:0!important;-webkit-margin-after:0!important;}
+  .no-print{display:none!important;}
+  .header{display:none!important;}
+  body{background:white!important;padding:0;margin:0;}
+  .print-layout{display:block!important;}
+  .print-section{page-break-inside:avoid;margin-bottom:0;}
+  .print-cards{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:flex-start;margin:0;padding:0;}
+  .print-divider{page-break-after:always;border:none;margin:0;height:0;}
+  .print-title{display:none;}
+}
+.print-layout{display:none;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🏫</div>
+  <div>
+    <h1>Student ID Maker</h1>
+    <p>Create and customize student ID cards in seconds!</p>
+  </div>
+</div>
+
+<div class="main">
+  <!-- FORM PANEL -->
+  <div class="form-panel no-print">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(0)">👤 S1</button>
+      <button class="tab-btn" onclick="switchTab(1)">👤 S2</button>
+      <button class="tab-btn" onclick="switchTab(2)">👤 S3</button>
+      <button class="tab-btn" onclick="switchTab(3)">👤 S4</button>
+      <button class="tab-btn" onclick="switchTab(4)">👤 S5</button>
+      <button class="tab-btn" onclick="switchTab(5)">👤 S6</button>
+      <button class="tab-btn" onclick="switchTab(6)">👤 S7</button>
+      <button class="tab-btn" onclick="switchTab(7)">👤 S8</button>
+      <button class="tab-btn" onclick="switchTab(8)">👤 S9</button>
+      <button class="tab-btn tab-settings" onclick="switchToSchoolSettings()">🏫 School</button>
+      <button class="tab-btn tab-design" onclick="switchToDesign()">🎨 Design</button>
+    </div>
+    <div id="form-fields"></div>
+  </div>
+
+  <!-- PREVIEW PANEL -->
+  <div class="preview-panel">
+    <div class="side-tabs no-print">
+      <button class="side-btn active" onclick="switchSide('front')">🪪 Front Side</button>
+      <button class="side-btn" onclick="switchSide('back')">↩ Back Side</button>
+    </div>
+    <div class="cards-area no-print" id="cards-area"></div>
+    <div class="export-btns no-print">
+      <button class="btn-print" onclick="handlePrint()">🖨️ Print</button>
+      <button class="btn-pdf" id="pdf-btn" onclick="handlePDF()">📄 Export PDF (Front &amp; Back)</button>
+    </div>
+    <div class="tip no-print">
+      💡 Fill in all 9 students (S1-S9). <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all 9 IDs ready to cut and laminate.
+    </div>
+  </div>
+</div>
+
+<!-- PRINT LAYOUT -->
+<div class="print-layout" id="print-layout">
+  <div class="print-cards" id="print-fronts"></div>
+  <hr class="print-divider">
+  <div class="print-cards" id="print-backs"></div>
+</div>
+
+<script>
+const schoolSettings = {
+  schoolName: "",
+  schoolAddr: "",
+  schoolId: "",
+  principal: "",
+  pTitle: "",
+  sys: "2026-2027,2027-2028,2028-2029,2029-2030",
+  schoolLogo: null,
+  depedLogo: null,
+  principalSignature: null
+};
+
+const designSettings = {
+  headerBg1: "#1a5e23",
+  headerBg2: "#2e7d32",
+  headerBg3: "#43a047",
+  headerTextColor: "#f9c30a",
+  bodyBg: "#ffffff",
+  nameFontColor: "#c0392b",
+  infoFontColor: "#333333",
+  borderColor: "#1a5e23",
+  accentColor: "#f9c30a",
+  footerBg1: "#1a5e23",
+  footerBg2: "#2e7d32",
+  baseFontSize: 8,
+  nameFontSize: 11.5,
+  bgPattern: "none",
+  signatureHeight: 22,
+  signatureOpacity: 1
+};
+
+const PRESET_THEMES = [
+  {name:"Green (Default)", h1:"#1a5e23", h2:"#2e7d32", h3:"#43a047", ht:"#f9c30a", bb:"#ffffff", nc:"#c0392b", ic:"#333333", bc:"#1a5e23", ac:"#f9c30a", f1:"#1a5e23", f2:"#2e7d32"},
+  {name:"Blue", h1:"#0d47a1", h2:"#1565c0", h3:"#1976d2", ht:"#ffee58", bb:"#ffffff", nc:"#b71c1c", ic:"#333333", bc:"#0d47a1", ac:"#ffee58", f1:"#0d47a1", f2:"#1565c0"},
+  {name:"Maroon", h1:"#4a0000", h2:"#7b0000", h3:"#b71c1c", ht:"#ffd54f", bb:"#fff8f8", nc:"#1a237e", ic:"#333333", bc:"#7b0000", ac:"#ffd54f", f1:"#4a0000", f2:"#7b0000"},
+  {name:"Navy & Gold", h1:"#001f5b", h2:"#003080", h3:"#0047ab", ht:"#f9c30a", bb:"#ffffff", nc:"#001f5b", ic:"#222222", bc:"#001f5b", ac:"#f9c30a", f1:"#001f5b", f2:"#003080"},
+  {name:"Purple", h1:"#4a148c", h2:"#6a1b9a", h3:"#8e24aa", ht:"#fff176", bb:"#ffffff", nc:"#1a237e", ic:"#333333", bc:"#4a148c", ac:"#fff176", f1:"#4a148c", f2:"#6a1b9a"},
+  {name:"Teal", h1:"#004d40", h2:"#00695c", h3:"#00897b", ht:"#ffd54f", bb:"#ffffff", nc:"#b71c1c", ic:"#333333", bc:"#004d40", ac:"#ffd54f", f1:"#004d40", f2:"#00695c"},
+];
+
+const BG_PATTERNS = [
+  {id:"none", label:"None"},
+  {id:"diagonal", label:"Diagonal"},
+  {id:"dots", label:"Dots"},
+  {id:"grid", label:"Grid"},
+  {id:"waves", label:"Waves"},
+  {id:"leaves", label:"Leaves"},
+];
+
+const FONT_SIZES = [
+  {label:"Small", base:7, name:10},
+  {label:"Medium", base:8, name:11.5},
+  {label:"Large", base:9, name:13},
+];
+
+const FONT_FAMILIES = [
+  {label:"Open Sans", val:"'Open Sans',Arial,sans-serif"},
+  {label:"Montserrat", val:"'Montserrat',Arial,sans-serif"},
+  {label:"Georgia", val:"Georgia,serif"},
+  {label:"Courier", val:"'Courier New',monospace"},
+  {label:"Verdana", val:"Verdana,sans-serif"},
+];
+
+designSettings.fontFamily = FONT_FAMILIES[0].val;
+
+const STUDENT_FIELDS = [
+  {k:"name", lbl:"Full Name (ALL CAPS)", ph:"Enter student name", section:"Student Info"},
+  {k:"lrn", lbl:"LRN (Learner Reference Number)", ph:"Enter LRN"},
+  {k:"grade", lbl:"Grade", ph:"Enter grade"},
+  {k:"section", lbl:"Section", ph:"Enter section"},
+  {k:"gender", lbl:"Gender", ph:"Male / Female"},
+  {k:"address", lbl:"Address", ph:"Enter address"},
+  {k:"emergencyName", lbl:"Emergency Contact Name", ph:"Enter contact name", section:"Emergency Contact"},
+  {k:"emergencyContact", lbl:"Contact Number", ph:"Enter contact number"},
+  {k:"emergencyAddress", lbl:"Contact Address", ph:"Enter contact address"},
+];
+
+const SCHOOL_FIELDS = [
+  {k:"schoolName", lbl:"School Name", ph:"Enter school name"},
+  {k:"schoolAddr", lbl:"School Address", ph:"Enter school address"},
+  {k:"schoolId", lbl:"School ID", ph:"Enter school ID"},
+  {k:"principal", lbl:"Principal Name", ph:"Enter principal name"},
+  {k:"pTitle", lbl:"Principal Title", ph:"Enter principal title"},
+  {k:"sys", lbl:"School Years (comma separated)", ph:"Enter school years (comma separated)"},
+];
+
+let students = [{},{},{},{},{},{},{},{},{}];
+let activeTab = 0;
+let activeSide = "front";
+let renderTimeout = null;
+
+function blankStudent() {
+  return {name:"",lrn:"",grade:"",section:"",gender:"",address:"",emergencyName:"",emergencyContact:"",emergencyAddress:"",photo:null};
+}
+for (let i = 0; i < 9; i++) { students[i] = blankStudent(); }
+
+function debouncedRender() {
+  clearTimeout(renderTimeout);
+  renderTimeout = setTimeout(renderCards, 300);
+}
+
+function switchTab(i) {
+  activeTab = i;
+  document.querySelectorAll(".tab-btn").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+  renderForm();
+}
+
+function switchToSchoolSettings() {
+  activeTab = "settings";
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>{b.classList.toggle("active",i===9);});
+  renderForm();
+}
+
+function switchToDesign() {
+  activeTab = "design";
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>{b.classList.toggle("active",i===10);});
+  renderForm();
+}
+
+function switchSide(side) {
+  activeSide = side;
+  document.querySelectorAll(".side-btn").forEach((b,i)=>b.classList.toggle("active",(i===0&&side==="front")||(i===1&&side==="back")));
+  renderCards();
+}
+
+function renderForm() {
+  const container = document.getElementById("form-fields");
+  let html = "";
+  let lastSection = "";
+  if (activeTab === "settings") {
+    html += `<div class="section-divider">🏫 School Settings</div>`;
+    SCHOOL_FIELDS.forEach(f => {
+      html += `<div class="field"><label>${f.lbl}</label>
+        <input type="text" value="${esc(schoolSettings[f.k]||"")}" placeholder="${f.ph}" oninput="updateSchoolField('${f.k}',this.value)">
+      </div>`;
+    });
+    html += `<div class="section-divider" style="margin-top:12px;">📸 Shared Images (for both students)</div>`;
+    html += `<div class="field"><label>School Logo / Seal</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'schoolLogo')"></div>`;
+    html += `<div class="field"><label>DepEd Logo</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'depedLogo')"></div>`;
+    html += `<div class="field"><label>Principal Signature</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'principalSignature')"></div>`;
+  } else if (activeTab === "design") {
+    html += `<div class="section-divider">🎨 Quick Theme Presets</div>`;
+    html += `<div class="pattern-row" style="flex-wrap:wrap;">`;
+    PRESET_THEMES.forEach((t,i) => {
+      html += `<button class="pattern-btn" onclick="applyTheme(${i})" style="background:${t.h1};color:${t.ht};border-color:${t.h1};">${t.name}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">🖼️ Background Pattern</div>`;
+    html += `<div class="pattern-row">`;
+    BG_PATTERNS.forEach(p => {
+      const active = designSettings.bgPattern === p.id ? " active" : "";
+      html += `<button class="pattern-btn${active}" onclick="setPattern('${p.id}')">${p.label}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">🎨 Header Colors</div>`;
+    html += `<div class="field"><label>Header Gradient Start</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.headerBg1}" oninput="setDesign('headerBg1',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.headerBg1}</span></div></div>`;
+    html += `<div class="field"><label>Header Gradient End</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.headerBg3}" oninput="setDesign('headerBg3',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.headerBg3}</span></div></div>`;
+    html += `<div class="field"><label>Header Text / Accent Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.headerTextColor}" oninput="setDesign('headerTextColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.headerTextColor}</span></div></div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">🖌️ Card Body Colors</div>`;
+    html += `<div class="field"><label>Card Background</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.bodyBg}" oninput="setDesign('bodyBg',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.bodyBg}</span></div></div>`;
+    html += `<div class="field"><label>Card Border Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.borderColor}" oninput="setDesign('borderColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.borderColor}</span></div></div>`;
+    html += `<div class="field"><label>Accent / Gold Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.accentColor}" oninput="setDesign('accentColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.accentColor}</span></div></div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">✍️ Font Colors</div>`;
+    html += `<div class="field"><label>Student Name Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.nameFontColor}" oninput="setDesign('nameFontColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.nameFontColor}</span></div></div>`;
+    html += `<div class="field"><label>Info Text Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.infoFontColor}" oninput="setDesign('infoFontColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.infoFontColor}</span></div></div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">📏 Font Size</div>`;
+    html += `<div class="pattern-row">`;
+    FONT_SIZES.forEach(sz => {
+      const active = designSettings.baseFontSize === sz.base ? " active" : "";
+      html += `<button class="pattern-btn${active}" onclick="setFontSize(${sz.base},${sz.name})">${sz.label}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">🔤 Font Family</div>`;
+    html += `<div class="pattern-row" style="flex-wrap:wrap;">`;
+    FONT_FAMILIES.forEach(ff => {
+      const active = designSettings.fontFamily === ff.val ? " active" : "";
+      html += `<button class="pattern-btn${active}" style="font-family:${ff.val}" onclick="setFontFamily('${ff.val.replace(/'/g,"\'")}')"> ${ff.label}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">✍️ Principal Signature</div>`;
+    html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Signature Height</label><input type="range" min="10" max="40" value="${designSettings.signatureHeight}" oninput="setSignatureHeight(this.value)" style="flex:1;accent-color:var(--green-mid);"><span class="range-val">${designSettings.signatureHeight}px</span></div>`;
+    html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Opacity</label><input type="range" min="0" max="100" value="${designSettings.signatureOpacity * 100}" oninput="setSignatureOpacity(this.value)" style="flex:1;accent-color:var(--green-mid);"><span class="range-val">${Math.round(designSettings.signatureOpacity * 100)}%</span></div>`;
+
+  } else {
+    STUDENT_FIELDS.forEach(f => {
+      if (f.section && f.section !== lastSection) {
+        html += `<div class="section-divider">${f.section === "Student Info" ? "👤" : "🆘"} ${f.section}</div>`;
+        lastSection = f.section;
+      }
+      html += `<div class="field"><label>${f.lbl}</label>
+        <input type="text" value="${esc(students[activeTab][f.k]||"")}" placeholder="${f.ph}" oninput="updateField('${f.k}',this.value)">
+      </div>`;
+    });
+    html += `<div class="section-divider">📸 Images</div>`;
+    html += `<div class="field"><label>Student Photo</label><input type="file" accept="image/*" onchange="handlePhoto(event)"></div>`;
+  }
+  container.innerHTML = html;
+}
+
+function updateField(k, v) { students[activeTab][k] = v; debouncedRender(); }
+function updateSchoolField(k, v) { schoolSettings[k] = v; renderCards(); }
+
+function handlePhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader(); r.onload = ev => { students[activeTab].photo = ev.target.result; renderCards(); };
+  r.readAsDataURL(file);
+}
+
+function handleSchoolImage(e, type) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader(); r.onload = ev => {
+    schoolSettings[type] = ev.target.result;
+    renderCards();
+  }; r.readAsDataURL(file);
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ===================== FRONT CARD ===================== */
+function makeFrontHTML(s, w, h) {
+  const sc = w / 220;
+  const D = designSettings;
+  const baseFs = D.baseFontSize || 8;
+  const nameFs = D.nameFontSize || 11.5;
+  const ff = D.fontFamily || "'Open Sans',Arial,sans-serif";
+  const fs = v => Math.round(v * sc * (baseFs/8) * 10) / 10;
+  const fsName = v => Math.round(v * sc * (nameFs/11.5) * 10) / 10;
+  const patStyle = getBgPatternStyle(sc);
+
+  const photoContent = s.photo
+    ? `<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+    : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:${fs(8)}px;text-align:center;"><div style="font-size:${fs(22)}px;margin-bottom:${2*sc}px;">👤</div><div>Photo</div></div>`;
+
+  const depedContent = schoolSettings.depedLogo
+    ? `<img src="${schoolSettings.depedLogo}" style="height:${30*sc}px;object-fit:contain;">`
+    : `<div style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:${fs(9)}px;font-weight:900;color:#c62828;letter-spacing:-.5px;font-family:Georgia,serif;"><span style="color:#c62828;">D</span><span style="color:#c62828;">ep</span><span style="color:#1a6ebd;">E</span><span style="color:#1a6ebd;">D</span></div><div style="font-size:${fs(5.5)}px;color:#555;text-align:center;font-weight:600;letter-spacing:.3px;">DEPARTMENT OF EDUCATION</div></div>`;
+
+  const sealContent = schoolSettings.schoolLogo
+    ? `<img src="${schoolSettings.schoolLogo}" style="width:${52*sc}px;height:${52*sc}px;border-radius:50%;border:${2*sc}px solid ${D.accentColor};object-fit:cover;">`
+    : `<div style="width:${52*sc}px;height:${52*sc}px;border-radius:50%;background:radial-gradient(circle,${D.headerBg2},${D.headerBg1});border:${2.5*sc}px solid ${D.accentColor};display:flex;align-items:center;justify-content:center;text-align:center;color:white;font-size:${fs(5)}px;font-weight:800;line-height:1.4;box-shadow:0 ${2*sc}px ${6*sc}px rgba(0,0,0,.3);font-family:'Montserrat',Arial,sans-serif;"><div>AGMFS<br><span style="font-size:${fs(4.5)}px;opacity:.85;">EST.2026</span></div></div>`;
+
+  const sigHeight = (D.signatureHeight || 22) * sc;
+  const sigOpacity = D.signatureOpacity !== undefined ? D.signatureOpacity : 1;
+  const sigContent = schoolSettings.principalSignature
+    ? `<img src="${schoolSettings.principalSignature}" style="height:${sigHeight}px;object-fit:contain;margin-bottom:${2*sc}px;opacity:${sigOpacity};">`
+    : `<div style="height:${1*sc}px;background:rgba(255,255,255,.5);margin:${3*sc}px ${12*sc}px ${4*sc}px;"></div>`;
+
+  return `
+  <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;position:relative;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
+    <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
+    <div style="background:linear-gradient(135deg,${D.headerBg1} 0%,${D.headerBg2} 70%,${D.headerBg3} 100%);padding:${5*sc}px ${10*sc}px;text-align:center;position:relative;overflow:hidden;z-index:2;">
+      <div style="position:absolute;top:0;left:0;right:0;height:${3*sc}px;background:linear-gradient(90deg,transparent,${D.accentColor},transparent);"></div>
+      <div style="color:${D.headerTextColor};font-weight:900;font-size:${fs(8.5)}px;line-height:1.3;letter-spacing:.3px;font-family:'Montserrat',Arial,sans-serif;">${schoolSettings.schoolName}</div>
+      <div style="color:rgba(255,255,255,.9);font-size:${fs(7)}px;margin-top:${1*sc}px;font-style:italic;">${schoolSettings.schoolAddr}</div>
+    </div>
+    <div style="display:flex;padding:${7*sc}px ${10*sc}px ${5*sc}px;gap:${8*sc}px;position:relative;z-index:2;">
+      <div style="width:${70*sc}px;height:${78*sc}px;border:${2*sc}px solid ${D.borderColor}44;border-radius:${5*sc}px;overflow:hidden;flex-shrink:0;background:#f1f8e9;box-shadow:0 ${2*sc}px ${6*sc}px rgba(0,0,0,.12);">${photoContent}</div>
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:${5*sc}px;padding-top:${2*sc}px;">${depedContent}${sealContent}</div>
+    </div>
+    <div style="margin:0 ${10*sc}px;padding:${3*sc}px ${6*sc}px;background:${D.headerBg1}18;border-radius:${4*sc}px;border:${sc}px solid ${D.borderColor}44;font-size:${fs(7.5)}px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;">
+      <span><span style="color:#777;">LRN: </span><b style="color:${D.headerBg1};">${esc(s.lrn||"____________")}</b></span>
+      <span><span style="color:#777;">School ID: </span><b style="color:${D.headerBg1};">${schoolSettings.schoolId}</b></span>
+    </div>
+    <div style="text-align:center;font-weight:900;font-size:${fsName(11.5)}px;padding:${4*sc}px ${10*sc}px ${3*sc}px;color:${D.nameFontColor};letter-spacing:.3px;font-family:'Montserrat',Arial,sans-serif;position:relative;z-index:2;">${esc(s.name||"STUDENT FULL NAME")}</div>
+    <div style="height:${1.5*sc}px;margin:0 ${10*sc}px;background:linear-gradient(90deg,transparent,${D.borderColor}44,transparent);position:relative;z-index:2;"></div>
+    <div style="display:flex;padding:${4*sc}px ${10*sc}px;gap:${8*sc}px;position:relative;z-index:2;">
+      <div style="flex:1;font-size:${fs(8)}px;">
+        <div style="color:#777;font-weight:600;margin-bottom:${2*sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;">Grade</div>
+        <div style="border:${1.5*sc}px solid ${D.borderColor}66;height:${20*sc}px;border-radius:${4*sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};">${esc(s.grade||"")}</div>
+      </div>
+      <div style="flex:1;font-size:${fs(8)}px;">
+        <div style="color:#777;font-weight:600;margin-bottom:${2*sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;">Section</div>
+        <div style="border:${1.5*sc}px solid ${D.borderColor}66;height:${20*sc}px;border-radius:${4*sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};">${esc(s.section||"")}</div>
+      </div>
+    </div>
+    <div style="padding:0 ${10*sc}px ${4*sc}px;font-size:${fs(8)}px;position:relative;z-index:2;">
+      <div style="margin-bottom:${2*sc}px;"><span style="color:#777;font-weight:600;">Gender: </span><b style="color:${D.infoFontColor};">${esc(s.gender||"")}</b></div>
+      <div><span style="color:#777;font-weight:600;">Address: </span><span style="font-size:${fs(7.5)}px;font-weight:600;color:${D.infoFontColor};">${esc(s.address||"")}</span></div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(135deg,${D.footerBg1},${D.footerBg2});padding:${5*sc}px ${10*sc}px;text-align:center;z-index:3;">
+      <div style="position:absolute;top:0;left:0;right:0;height:${2.5*sc}px;background:linear-gradient(90deg,transparent,${D.accentColor},transparent);"></div>
+      ${sigContent}
+      <div style="color:white;font-weight:800;font-size:${fs(8.5)}px;letter-spacing:.2px;font-family:'Montserrat',Arial,sans-serif;">${schoolSettings.principal}</div>
+      <div style="color:${D.accentColor};font-size:${fs(7.5)}px;font-weight:600;">${schoolSettings.pTitle}</div>
+    </div>
+  </div>`;
+}
+
+/* ===================== BACK CARD ===================== */
+function makeBackHTML(s, w, h, canvasId) {
+  const sc = w / 220;
+  const D = designSettings;
+  const baseFs = D.baseFontSize || 8;
+  const ff = D.fontFamily || "'Open Sans',Arial,sans-serif";
+  const fs = v => Math.round(v * sc * (baseFs/8) * 10) / 10;
+  const patStyle = getBgPatternStyle(sc);
+  const sysArray = schoolSettings.sys.split(",").map(x => x.trim()).filter(x => x);
+  const rows = sysArray.map(sy => `
+    <tr>
+      <td style="padding:${3.5*sc}px ${4*sc}px;border:${sc}px solid ${D.borderColor}44;text-align:center;color:${D.infoFontColor};font-size:${fs(7.5)}px;">${sy}</td>
+      <td style="padding:${3.5*sc}px ${4*sc}px;border:${sc}px solid ${D.borderColor}44;"></td>
+    </tr>`).join("");
+
+  const depedContent = schoolSettings.depedLogo
+    ? `<img src="${schoolSettings.depedLogo}" style="height:${28*sc}px;object-fit:contain;">`
+    : `<div style="text-align:center;"><div style="font-size:${fs(10)}px;font-weight:900;font-family:Georgia,serif;"><span style="color:#c62828;">Dep</span><span style="color:#1a6ebd;">ED</span></div><div style="font-size:${fs(5.5)}px;color:#555;font-weight:600;letter-spacing:.2px;">DEPARTMENT<br>OF EDUCATION</div></div>`;
+
+  return `
+  <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;display:flex;flex-direction:column;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);position:relative;">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
+    <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
+    <div style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2},${D.headerBg3});padding:${6*sc}px ${14*sc}px;display:flex;align-items:center;gap:${8*sc}px;position:relative;z-index:2;">
+      <div style="position:absolute;top:0;left:0;right:0;height:${3*sc}px;background:linear-gradient(90deg,transparent,${D.accentColor},transparent);"></div>
+      ${depedContent}
+      <div style="text-align:center;flex:1;">
+        <div style="font-weight:800;font-size:${fs(7.5)}px;color:${D.headerTextColor};font-family:'Montserrat',Arial,sans-serif;line-height:1.3;">${schoolSettings.schoolName}</div>
+        <div style="font-size:${fs(6.5)}px;color:rgba(255,255,255,.85);font-style:italic;margin-top:${1*sc}px;">${schoolSettings.schoolAddr}</div>
+      </div>
+    </div>
+    <div style="padding:${6*sc}px ${12*sc}px ${4*sc}px;position:relative;z-index:2;">
+      <table style="width:100%;border-collapse:collapse;font-size:${fs(7.5)}px;">
+        <thead><tr style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2});">
+          <th style="padding:${4*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">School Year</th>
+          <th style="padding:${4*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">Validity</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="padding:${2*sc}px ${12*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
+      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(35*sc)}" style="display:block;"></canvas>
+    </div>
+    <div style="padding:${3*sc}px ${12*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.55;background:${D.bodyBg};position:relative;z-index:2;">
+      <p style="margin:0 0 ${4*sc}px;color:#666;font-style:italic;font-size:${fs(7)}px;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
+      <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${4*sc}px;"></div>
+      <p style="margin:0 0 ${2*sc}px;font-weight:700;color:#c0392b;font-size:${fs(7.5)}px;">🆘 In case of emergency please notify:</p>
+      <p style="margin:0;font-weight:800;font-size:${fs(9)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;">${esc(s.emergencyName||"___________________")}</p>
+      <p style="margin:${2*sc}px 0 0;font-size:${fs(7.5)}px;"><span style="color:#777;font-weight:600;">Contact: </span>${esc(s.emergencyContact||"_______________")}</p>
+      <p style="margin:${1*sc}px 0 0;font-size:${fs(7)}px;"><span style="color:#777;font-weight:600;">Address: </span>${esc(s.emergencyAddress||"_______________")}</p>
+    </div>
+    <div style="height:${6*sc}px;background:linear-gradient(90deg,${D.accentColor} 0%,${D.headerBg1} 50%,${D.accentColor} 100%);position:relative;z-index:2;"></div>
+  </div>`;
+}
+
+/* ===================== BARCODE ===================== */
+function drawBarcode(lrn, canvas) {
+  if (!canvas || !lrn) return;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = false;
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+  const code = lrn.replace(/\D/g,"").padEnd(12,"0").slice(0,12);
+  const pat = [[3,2,1,1],[2,2,2,1],[2,1,2,2],[1,4,1,1],[1,1,3,2],[1,2,3,1],[1,1,1,4],[1,3,1,2],[1,2,1,3],[3,1,1,2]];
+  const bw = Math.max(1.0, w/160);
+
+  // Calculate total barcode width first
+  let totalW = 3 * bw; // start guard
+  code.split("").forEach(d => { pat[+d].forEach(width => { totalW += width * bw; }); });
+  totalW += 3 * bw; // end guard
+
+  // Start x so barcode is centered
+  let x = Math.floor((w - totalW) / 2);
+
+  ctx.fillStyle="#000";
+  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-11); x+=b*bw; });
+  code.split("").forEach(d=>{
+    pat[+d].forEach((width,i)=>{ if(i%2===0) ctx.fillRect(x,0,width*bw,h-11); x+=width*bw; });
+  });
+  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-11); x+=b*bw; });
+  
+  // Draw numbers with compact clarity
+  ctx.fillStyle="#000"; 
+  ctx.font=`bold ${Math.max(9,h/3.5)}px Arial, sans-serif`; 
+  ctx.textAlign="center"; 
+  ctx.textBaseline="bottom";
+  const segs=[]; 
+  for(let i=0;i<code.length;i+=4) segs.push(code.slice(i,i+4));
+  ctx.fillText(segs.join(" "), w/2, h-1);
+}
+
+/* ===================== RENDER ===================== */
+function setDesign(k, v) {
+  designSettings[k] = v;
+  // keep footerBg in sync with header
+  if (k === "headerBg1") { designSettings.footerBg1 = v; designSettings.footerBg2 = designSettings.headerBg2; }
+  if (k === "headerBg3") { designSettings.headerBg2 = v; designSettings.footerBg2 = v; }
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setPattern(p) {
+  designSettings.bgPattern = p;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setFontSize(base, name) {
+  designSettings.baseFontSize = base;
+  designSettings.nameFontSize = name;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setFontFamily(ff) {
+  designSettings.fontFamily = ff;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setSignatureHeight(val) {
+  designSettings.signatureHeight = parseInt(val);
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setSignatureOpacity(val) {
+  designSettings.signatureOpacity = parseInt(val) / 100;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function applyTheme(i) {
+  const t = PRESET_THEMES[i];
+  designSettings.headerBg1 = t.h1;
+  designSettings.headerBg2 = t.h2;
+  designSettings.headerBg3 = t.h3;
+  designSettings.headerTextColor = t.ht;
+  designSettings.bodyBg = t.bb;
+  designSettings.nameFontColor = t.nc;
+  designSettings.infoFontColor = t.ic;
+  designSettings.borderColor = t.bc;
+  designSettings.accentColor = t.ac;
+  designSettings.footerBg1 = t.f1;
+  designSettings.footerBg2 = t.f2;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function getBgPatternStyle(sc) {
+  const p = designSettings.bgPattern;
+  const ac = designSettings.accentColor;
+  if (p === "none") return "";
+  if (p === "diagonal") return `background-image:repeating-linear-gradient(45deg,${ac}18 0,${ac}18 1px,transparent 0,transparent 50%);background-size:${12*sc}px ${12*sc}px;`;
+  if (p === "dots") return `background-image:radial-gradient(${ac}33 ${1*sc}px,transparent ${1*sc}px);background-size:${10*sc}px ${10*sc}px;`;
+  if (p === "grid") return `background-image:linear-gradient(${ac}22 1px,transparent 1px),linear-gradient(90deg,${ac}22 1px,transparent 1px);background-size:${12*sc}px ${12*sc}px;`;
+  if (p === "waves") return `background-image:repeating-linear-gradient(-45deg,${ac}15 0,${ac}15 2px,transparent 2px,transparent ${10*sc}px);`;
+  if (p === "leaves") return `background-image:radial-gradient(ellipse at 0% 50%,${ac}22 ${6*sc}px,transparent ${6*sc}px),radial-gradient(ellipse at 100% 50%,${ac}22 ${6*sc}px,transparent ${6*sc}px);background-size:${20*sc}px ${20*sc}px;`;
+  return "";
+}
+
+function renderCards() {
+  const area = document.getElementById("cards-area");
+  let html = "";
+  students.forEach((s, i) => {
+    html += `<div class="card-wrap"><div class="card-label">Student ${i+1}</div>`;
+    if (activeSide === "front") {
+      html += makeFrontHTML(s, 220, 330);
+    } else {
+      html += makeBackHTML(s, 220, 330, `bc_preview_${i}`);
+    }
+    html += `</div>`;
+  });
+  area.innerHTML = html;
+  if (activeSide === "back") {
+    setTimeout(() => {
+      students.forEach((s, i) => {
+        const canvas = document.getElementById(`bc_preview_${i}`);
+        if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+      });
+    }, 60);
+  }
+  updatePrintLayout();
+}
+
+function updatePrintLayout() {
+  const fronts = document.getElementById("print-fronts");
+  const backs = document.getElementById("print-backs");
+  let fhtml = "", bhtml = "";
+  students.forEach((s, i) => {
+    fhtml += `<div>${makeFrontHTML(s, 220, 330)}</div>`;
+    bhtml += `<div>${makeBackHTML(s, 220, 330, `bc_print_${i}`)}</div>`;
+  });
+  fronts.innerHTML = fhtml;
+  backs.innerHTML = bhtml;
+  setTimeout(() => {
+    students.forEach((s, i) => {
+      const canvas = document.getElementById(`bc_print_${i}`);
+      if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+    });
+  }, 60);
+}
+
+function handlePrint() {
+  updatePrintLayout();
+  // Wait for barcodes to fully render before opening print dialog
+  setTimeout(() => window.print(), 500);
+}
+
+async function handlePDF() {
+  const btn = document.getElementById("pdf-btn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Generating PDF...";
+
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const a4W = 210, a4H = 297;
+
+    // FRONT PAGE
+    const containerFront = document.createElement("div");
+    containerFront.style.cssText = "position:fixed;left:-9999px;top:0;width:720px;background:white;padding:2px;font-family:Open Sans,Arial,sans-serif;";
+    let frontHtml = `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">`;
+    students.forEach((s) => { frontHtml += `<div>${makeFrontHTML(s, 220, 330)}</div>`; });
+    frontHtml += `</div>`;
+    containerFront.innerHTML = frontHtml;
+    document.body.appendChild(containerFront);
+
+    await new Promise(r => setTimeout(r, 100));
+    const cvsFront = await html2canvas(containerFront, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+    document.body.removeChild(containerFront);
+
+    const pxWFront = cvsFront.width / 2;
+    const pxHFront = cvsFront.height / 2;
+    const ratioFront = Math.min(a4W / pxWFront, a4H / pxHFront);
+    const pdfWFront = pxWFront * ratioFront;
+    const pdfHFront = pxHFront * ratioFront;
+    const offXFront = (a4W - pdfWFront) / 2;
+    const offYFront = Math.max(1, (a4H - pdfHFront) / 2);
+
+    const imgDataFront = cvsFront.toDataURL("image/jpeg", 0.95);
+    pdf.addImage(imgDataFront, "JPEG", offXFront, offYFront, pdfWFront, pdfHFront);
+
+    // BACK PAGE
+    pdf.addPage();
+    const containerBack = document.createElement("div");
+    containerBack.style.cssText = "position:fixed;left:-9999px;top:0;width:720px;background:white;padding:2px;font-family:Open Sans,Arial,sans-serif;";
+    let backHtml = `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">`;
+    students.forEach((s, i) => { backHtml += `<div>${makeBackHTML(s, 220, 330, "bc_pdf_" + i)}</div>`; });
+    backHtml += `</div>`;
+    containerBack.innerHTML = backHtml;
+    document.body.appendChild(containerBack);
+
+    await new Promise(r => setTimeout(r, 100));
+    students.forEach((s, i) => {
+      const bc = document.getElementById("bc_pdf_" + i);
+      if (bc && s.lrn) drawBarcode(s.lrn, bc);
+    });
+    await new Promise(r => setTimeout(r, 100));
+
+    const cvsBack = await html2canvas(containerBack, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+    document.body.removeChild(containerBack);
+
+    const pxWBack = cvsBack.width / 2;
+    const pxHBack = cvsBack.height / 2;
+    const ratioBack = Math.min(a4W / pxWBack, a4H / pxHBack);
+    const pdfWBack = pxWBack * ratioBack;
+    const pdfHBack = pxHBack * ratioBack;
+    const offXBack = (a4W - pdfWBack) / 2;
+    const offYBack = Math.max(1, (a4H - pdfHBack) / 2);
+
+    const imgDataBack = cvsBack.toDataURL("image/jpeg", 0.95);
+    pdf.addImage(imgDataBack, "JPEG", offXBack, offYBack, pdfWBack, pdfHBack);
+
+    const name1 = (students[0].name || "Student1").split(" ")[0];
+    const name2 = (students[1].name || "Student2").split(" ")[0];
+    pdf.save("AGMFS_ID_" + name1 + "_" + name2 + ".pdf");
+
+  } catch(err) {
+    console.error("PDF error:", err);
+    alert("PDF export failed. Use the Print button instead and choose Save as PDF in the dialog.");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "📄 Export PDF (Front & Back)";
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+renderForm();
+renderCards();
+</script>
+</body>
+</html>
