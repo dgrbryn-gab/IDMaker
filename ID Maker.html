@@ -119,6 +119,7 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
 
 /* ===== PRINT ===== */
 @page {
+  size: A3;
   margin: 5mm;
   margin-top: 0;
   margin-bottom: 0;
@@ -130,7 +131,7 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
   body{background:white!important;padding:0;margin:0;}
   .print-layout{display:block!important;}
   .print-section{page-break-inside:avoid;margin-bottom:0;}
-  .print-cards{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:flex-start;margin:0;padding:0;}
+  .print-cards{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap;margin:0 auto;padding:20mm;max-width:100%;}
   .print-divider{page-break-after:always;border:none;margin:0;height:0;}
   .print-title{display:none;}
 }
@@ -274,7 +275,6 @@ const SCHOOL_FIELDS = [
   {k:"schoolId", lbl:"School ID", ph:"Enter school ID"},
   {k:"principal", lbl:"Principal Name", ph:"Enter principal name"},
   {k:"pTitle", lbl:"Principal Title", ph:"Enter principal title"},
-  {k:"sys", lbl:"School Years (comma separated)", ph:"Enter school years (comma separated)"},
 ];
 
 let students = [{},{},{},{},{},{},{},{},{}];
@@ -500,8 +500,7 @@ function makeBackHTML(s, w, h, canvasId) {
   const sysArray = schoolSettings.sys.split(",").map(x => x.trim()).filter(x => x);
   const rows = sysArray.map(sy => `
     <tr>
-      <td style="padding:${3.5*sc}px ${4*sc}px;border:${sc}px solid ${D.borderColor}44;text-align:center;color:${D.infoFontColor};font-size:${fs(7.5)}px;">${sy}</td>
-      <td style="padding:${3.5*sc}px ${4*sc}px;border:${sc}px solid ${D.borderColor}44;"></td>
+      <td style="padding:${15*sc}px ${8*sc}px;border:${sc}px solid ${D.borderColor}44;"></td>
     </tr>`).join("");
 
   const depedContent = schoolSettings.depedLogo
@@ -520,21 +519,20 @@ function makeBackHTML(s, w, h, canvasId) {
         <div style="font-size:${fs(6.5)}px;color:rgba(255,255,255,.85);font-style:italic;margin-top:${1*sc}px;">${schoolSettings.schoolAddr}</div>
       </div>
     </div>
-    <div style="padding:${6*sc}px ${12*sc}px ${4*sc}px;position:relative;z-index:2;">
+    <div style="padding:${8*sc}px ${16*sc}px ${6*sc}px;position:relative;z-index:2;">
       <table style="width:100%;border-collapse:collapse;font-size:${fs(7.5)}px;">
         <thead><tr style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2});">
-          <th style="padding:${4*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">School Year</th>
-          <th style="padding:${4*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">Validity</th>
+          <th style="padding:${5*sc}px ${8*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">Validity</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="padding:${2*sc}px ${12*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
-      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(35*sc)}" style="display:block;"></canvas>
+    <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
+      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(35*sc)}" style="display:block;margin-bottom:${4*sc}px;"></canvas>
     </div>
-    <div style="padding:${3*sc}px ${12*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.55;background:${D.bodyBg};position:relative;z-index:2;">
-      <p style="margin:0 0 ${4*sc}px;color:#666;font-style:italic;font-size:${fs(7)}px;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
-      <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${4*sc}px;"></div>
+    <div style="padding:${1*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.55;background:${D.bodyBg};position:relative;z-index:2;">
+      <p style="margin:0 0 ${1*sc}px;color:#666;font-style:italic;font-size:${fs(7)}px;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
+      <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${1*sc}px;"></div>
       <p style="margin:0 0 ${2*sc}px;font-weight:700;color:#c0392b;font-size:${fs(7.5)}px;">🆘 In case of emergency please notify:</p>
       <p style="margin:0;font-weight:800;font-size:${fs(9)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;">${esc(s.emergencyName||"___________________")}</p>
       <p style="margin:${2*sc}px 0 0;font-size:${fs(7.5)}px;"><span style="color:#777;font-weight:600;">Contact: </span>${esc(s.emergencyContact||"_______________")}</p>
@@ -565,11 +563,11 @@ function drawBarcode(lrn, canvas) {
   let x = Math.floor((w - totalW) / 2);
 
   ctx.fillStyle="#000";
-  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-11); x+=b*bw; });
+  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-14); x+=b*bw; });
   code.split("").forEach(d=>{
-    pat[+d].forEach((width,i)=>{ if(i%2===0) ctx.fillRect(x,0,width*bw,h-11); x+=width*bw; });
+    pat[+d].forEach((width,i)=>{ if(i%2===0) ctx.fillRect(x,0,width*bw,h-14); x+=width*bw; });
   });
-  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-11); x+=b*bw; });
+  [1,1,1].forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,0,b*bw,h-14); x+=b*bw; });
   
   // Draw numbers with compact clarity
   ctx.fillStyle="#000"; 
@@ -578,7 +576,7 @@ function drawBarcode(lrn, canvas) {
   ctx.textBaseline="bottom";
   const segs=[]; 
   for(let i=0;i<code.length;i+=4) segs.push(code.slice(i,i+4));
-  ctx.fillText(segs.join(" "), w/2, h-1);
+  ctx.fillText(segs.join(" "), w/2, h);
 }
 
 /* ===================== RENDER ===================== */
@@ -657,9 +655,9 @@ function renderCards() {
   students.forEach((s, i) => {
     html += `<div class="card-wrap"><div class="card-label">Student ${i+1}</div>`;
     if (activeSide === "front") {
-      html += makeFrontHTML(s, 220, 330);
+      html += makeFrontHTML(s, 260, 390);
     } else {
-      html += makeBackHTML(s, 220, 330, `bc_preview_${i}`);
+      html += makeBackHTML(s, 260, 390, `bc_preview_${i}`);
     }
     html += `</div>`;
   });
@@ -680,8 +678,8 @@ function updatePrintLayout() {
   const backs = document.getElementById("print-backs");
   let fhtml = "", bhtml = "";
   students.forEach((s, i) => {
-    fhtml += `<div>${makeFrontHTML(s, 220, 330)}</div>`;
-    bhtml += `<div>${makeBackHTML(s, 220, 330, `bc_print_${i}`)}</div>`;
+    fhtml += `<div>${makeFrontHTML(s, 260, 390)}</div>`;
+    bhtml += `<div>${makeBackHTML(s, 260, 390, `bc_print_${i}`)}</div>`;
   });
   fronts.innerHTML = fhtml;
   backs.innerHTML = bhtml;
@@ -709,14 +707,14 @@ async function handlePDF() {
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
 
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const a4W = 210, a4H = 297;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a3" });
+    const a3W = 297, a3H = 420;
 
     // FRONT PAGE
     const containerFront = document.createElement("div");
-    containerFront.style.cssText = "position:fixed;left:-9999px;top:0;width:720px;background:white;padding:2px;font-family:Open Sans,Arial,sans-serif;";
-    let frontHtml = `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">`;
-    students.forEach((s) => { frontHtml += `<div>${makeFrontHTML(s, 220, 330)}</div>`; });
+    containerFront.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:white;padding:60px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
+    let frontHtml = `<div style="display:grid;grid-template-columns:repeat(3,260px);gap:28px;justify-items:center;align-items:start;">`;
+    students.forEach((s) => { frontHtml += `<div>${makeFrontHTML(s, 260, 390)}</div>`; });
     frontHtml += `</div>`;
     containerFront.innerHTML = frontHtml;
     document.body.appendChild(containerFront);
@@ -727,11 +725,11 @@ async function handlePDF() {
 
     const pxWFront = cvsFront.width / 2;
     const pxHFront = cvsFront.height / 2;
-    const ratioFront = Math.min(a4W / pxWFront, a4H / pxHFront);
+    const ratioFront = Math.min(a3W / pxWFront, a3H / pxHFront);
     const pdfWFront = pxWFront * ratioFront;
     const pdfHFront = pxHFront * ratioFront;
-    const offXFront = (a4W - pdfWFront) / 2;
-    const offYFront = Math.max(1, (a4H - pdfHFront) / 2);
+    const offXFront = (a3W - pdfWFront) / 2;
+    const offYFront = Math.max(1, (a3H - pdfHFront) / 2);
 
     const imgDataFront = cvsFront.toDataURL("image/jpeg", 0.95);
     pdf.addImage(imgDataFront, "JPEG", offXFront, offYFront, pdfWFront, pdfHFront);
@@ -739,9 +737,9 @@ async function handlePDF() {
     // BACK PAGE
     pdf.addPage();
     const containerBack = document.createElement("div");
-    containerBack.style.cssText = "position:fixed;left:-9999px;top:0;width:720px;background:white;padding:2px;font-family:Open Sans,Arial,sans-serif;";
-    let backHtml = `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">`;
-    students.forEach((s, i) => { backHtml += `<div>${makeBackHTML(s, 220, 330, "bc_pdf_" + i)}</div>`; });
+    containerBack.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:white;padding:60px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
+    let backHtml = `<div style="display:grid;grid-template-columns:repeat(3,260px);gap:28px;justify-items:center;align-items:start;">`;
+    students.forEach((s, i) => { backHtml += `<div>${makeBackHTML(s, 260, 390, "bc_pdf_" + i)}</div>`; });
     backHtml += `</div>`;
     containerBack.innerHTML = backHtml;
     document.body.appendChild(containerBack);
@@ -758,11 +756,11 @@ async function handlePDF() {
 
     const pxWBack = cvsBack.width / 2;
     const pxHBack = cvsBack.height / 2;
-    const ratioBack = Math.min(a4W / pxWBack, a4H / pxHBack);
+    const ratioBack = Math.min(a3W / pxWBack, a3H / pxHBack);
     const pdfWBack = pxWBack * ratioBack;
     const pdfHBack = pxHBack * ratioBack;
-    const offXBack = (a4W - pdfWBack) / 2;
-    const offYBack = Math.max(1, (a4H - pdfHBack) / 2);
+    const offXBack = (a3W - pdfWBack) / 2;
+    const offYBack = Math.max(1, (a3H - pdfHBack) / 2);
 
     const imgDataBack = cvsBack.toDataURL("image/jpeg", 0.95);
     pdf.addImage(imgDataBack, "JPEG", offXBack, offYBack, pdfWBack, pdfHBack);
