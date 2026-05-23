@@ -59,6 +59,20 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
 .range-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
 .range-row input[type=range]{flex:1;accent-color:#7b1fa2;}
 .range-val{font-size:11px;font-weight:700;color:#6a1b9a;min-width:28px;text-align:right;}
+/* ===== PRESET MANAGER ===== */
+.preset-manager{background:#f9f5ff;border:1.5px solid #ce93d8;border-radius:10px;padding:10px;margin-top:4px;}
+.preset-save-row{display:flex;gap:6px;margin-bottom:8px;}
+.preset-save-row input{flex:1;padding:6px 9px;font-size:11px;border:1.5px solid #ce93d8;border-radius:7px;outline:none;font-family:'Open Sans',sans-serif;color:#333;}
+.preset-save-row input:focus{border-color:#7b1fa2;box-shadow:0 0 0 2px rgba(123,31,162,.12);}
+.btn-save-preset{padding:6px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#7b1fa2,#9c27b0);color:white;border:none;border-radius:7px;cursor:pointer;white-space:nowrap;font-family:'Montserrat',sans-serif;transition:all .18s;}
+.btn-save-preset:hover{background:linear-gradient(135deg,#6a1b9a,#7b1fa2);transform:translateY(-1px);}
+.saved-presets-list{display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto;}
+.saved-preset-item{display:flex;align-items:center;gap:6px;}
+.btn-load-preset{flex:1;padding:5px 8px;font-size:10.5px;font-weight:700;border-radius:6px;cursor:pointer;border:1.5px solid #ce93d8;background:white;color:#6a1b9a;transition:all .15s;text-align:left;font-family:'Open Sans',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-load-preset:hover{background:#f3e5f5;border-color:#7b1fa2;}
+.btn-del-preset{padding:4px 7px;font-size:11px;background:#ffebee;color:#c62828;border:1.5px solid #ef9a9a;border-radius:6px;cursor:pointer;font-weight:700;transition:all .15s;flex-shrink:0;}
+.btn-del-preset:hover{background:#ffcdd2;border-color:#c62828;}
+.no-presets-msg{font-size:10.5px;color:#9e9e9e;font-style:italic;text-align:center;padding:6px 0;}
 
 /* ===== FORM FIELDS ===== */
 .field{margin-bottom:9px;}
@@ -130,10 +144,8 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
   .header{display:none!important;}
   body{background:white!important;padding:0;margin:0;}
   .print-layout{display:block!important;}
-  .print-section{page-break-inside:avoid;margin-bottom:0;}
-  .print-cards{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap;margin:0 auto;padding:20mm;max-width:100%;}
-  .print-divider{page-break-after:always;border:none;margin:0;height:0;}
-  .print-title{display:none;}
+  .print-page{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:20px;padding:15mm;box-sizing:border-box;page-break-after:always;page-break-inside:avoid;min-height:0;}
+  .print-page:last-child{page-break-after:auto;}
 }
 .print-layout{display:none;}
 </style>
@@ -186,9 +198,7 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
 
 <!-- PRINT LAYOUT -->
 <div class="print-layout" id="print-layout">
-  <div class="print-cards" id="print-fronts"></div>
-  <hr class="print-divider">
-  <div class="print-cards" id="print-backs"></div>
+  <div id="print-pages"></div>
 </div>
 
 <script>
@@ -220,7 +230,8 @@ const designSettings = {
   nameFontSize: 11.5,
   bgPattern: "none",
   signatureHeight: 22,
-  signatureOpacity: 1
+  signatureOpacity: 1,
+  curveStyle: "wave"
 };
 
 const PRESET_THEMES = [
@@ -255,7 +266,17 @@ const FONT_FAMILIES = [
   {label:"Verdana", val:"Verdana,sans-serif"},
 ];
 
+const CARD_SIZES = [
+  {label:"Small (4.1×7.5cm)", scale:0.75, w:195, h:292},
+  {label:"Medium (5.2×9.8cm)", scale:1.0, w:260, h:390},
+  {label:"Large (6.2×11.7cm)", scale:1.2, w:312, h:468},
+  {label:"XL (7.2×13.7cm)", scale:1.4, w:364, h:546},
+  {label:"XXL (8.2×15.6cm)", scale:1.6, w:416, h:624},
+];
+
 designSettings.fontFamily = FONT_FAMILIES[0].val;
+designSettings.cardScale = 1.0;
+designSettings.paddingScale = 1.0;
 
 const STUDENT_FIELDS = [
   {k:"name", lbl:"Full Name (ALL CAPS)", ph:"Enter student name", section:"Student Info"},
@@ -281,6 +302,11 @@ let students = [{},{},{},{},{},{},{},{},{}];
 let activeTab = 0;
 let activeSide = "front";
 let renderTimeout = null;
+
+function getCardDimensions() {
+  const size = CARD_SIZES.find(s => s.scale === designSettings.cardScale) || CARD_SIZES[1];
+  return { w: Math.round(size.w * (designSettings.paddingScale || 1.0)), h: Math.round(size.h * (designSettings.paddingScale || 1.0)) };
+}
 
 function blankStudent() {
   return {name:"",lrn:"",grade:"",section:"",gender:"",address:"",emergencyName:"",emergencyContact:"",emergencyAddress:"",photo:null};
@@ -347,6 +373,16 @@ function renderForm() {
     });
     html += `</div>`;
 
+    html += `<div class="section-divider" style="margin-top:12px;">📏 ID Card Size</div>`;
+    html += `<div class="pattern-row" style="flex-direction:column;gap:6px;">`;
+    CARD_SIZES.forEach(sz => {
+      const active = designSettings.cardScale === sz.scale ? " active" : "";
+      html += `<button class="pattern-btn${active}" style="justify-content:flex-start;" onclick="setCardSize(${sz.scale})">${sz.label}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Content Spacing</label><input type="range" min="0.8" max="1.4" step="0.1" value="${designSettings.paddingScale}" oninput="setPaddingScale(this.value)" style="flex:1;accent-color:var(--green-mid);"><span class="range-val">${(designSettings.paddingScale*100).toFixed(0)}%</span></div>`;
+
     html += `<div class="section-divider" style="margin-top:12px;">🎨 Header Colors</div>`;
     html += `<div class="field"><label>Header Gradient Start</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.headerBg1}" oninput="setDesign('headerBg1',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.headerBg1}</span></div></div>`;
     html += `<div class="field"><label>Header Gradient End</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.headerBg3}" oninput="setDesign('headerBg3',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.headerBg3}</span></div></div>`;
@@ -380,6 +416,36 @@ function renderForm() {
     html += `<div class="section-divider" style="margin-top:12px;">✍️ Principal Signature</div>`;
     html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Signature Height</label><input type="range" min="10" max="40" value="${designSettings.signatureHeight}" oninput="setSignatureHeight(this.value)" style="flex:1;accent-color:var(--green-mid);"><span class="range-val">${designSettings.signatureHeight}px</span></div>`;
     html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Opacity</label><input type="range" min="0" max="100" value="${designSettings.signatureOpacity * 100}" oninput="setSignatureOpacity(this.value)" style="flex:1;accent-color:var(--green-mid);"><span class="range-val">${Math.round(designSettings.signatureOpacity * 100)}%</span></div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">〰️ Background Curves</div>`;
+    html += `<div class="pattern-row">`;
+    CURVE_STYLES.forEach(cs => {
+      const active = (designSettings.curveStyle || "wave") === cs.id ? " active" : "";
+      html += `<button class="pattern-btn${active}" onclick="setCurveStyle('${cs.id}')">${cs.label}</button>`;
+    });
+    html += `</div>`;
+
+    // Save Preset section
+    const userPresets = loadUserPresets();
+    html += `<div class="section-divider" style="margin-top:12px;">💾 Save Design Preset</div>`;
+    html += `<div class="preset-manager">`;
+    html += `<div class="preset-save-row">
+      <input id="preset-name-input" type="text" placeholder="Enter preset name..." maxlength="32">
+      <button class="btn-save-preset" onclick="saveCurrentPreset()">💾 Save</button>
+    </div>`;
+    if (userPresets.length === 0) {
+      html += `<div class="no-presets-msg">No saved presets yet. Customize your design and save it!</div>`;
+    } else {
+      html += `<div class="saved-presets-list">`;
+      userPresets.forEach(p => {
+        html += `<div class="saved-preset-item">
+          <button class="btn-load-preset" onclick="loadPreset('${p.name.replace(/'/g,"\\'")}')">🎨 ${esc(p.name)}</button>
+          <button class="btn-del-preset" onclick="deletePreset('${p.name.replace(/'/g,"\\'")}')">✕</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
 
   } else {
     STUDENT_FIELDS.forEach(f => {
@@ -447,8 +513,10 @@ function makeFrontHTML(s, w, h) {
     ? `<img src="${schoolSettings.principalSignature}" style="height:${sigHeight}px;object-fit:contain;margin-bottom:${2*sc}px;opacity:${sigOpacity};">`
     : `<div style="height:${1*sc}px;background:rgba(255,255,255,.5);margin:${3*sc}px ${12*sc}px ${4*sc}px;"></div>`;
 
+  const curveStyle = getCurveDesign(sc, D);
   return `
   <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;position:relative;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);">
+    ${curveStyle}
     <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
     <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
     <div style="background:linear-gradient(135deg,${D.headerBg1} 0%,${D.headerBg2} 70%,${D.headerBg3} 100%);padding:${5*sc}px ${10*sc}px;text-align:center;position:relative;overflow:hidden;z-index:2;">
@@ -507,8 +575,10 @@ function makeBackHTML(s, w, h, canvasId) {
     ? `<img src="${schoolSettings.depedLogo}" style="height:${28*sc}px;object-fit:contain;">`
     : `<div style="text-align:center;"><div style="font-size:${fs(10)}px;font-weight:900;font-family:Georgia,serif;"><span style="color:#c62828;">Dep</span><span style="color:#1a6ebd;">ED</span></div><div style="font-size:${fs(5.5)}px;color:#555;font-weight:600;letter-spacing:.2px;">DEPARTMENT<br>OF EDUCATION</div></div>`;
 
+  const curveStyleBack = getCurveDesign(sc, D);
   return `
   <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;display:flex;flex-direction:column;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);position:relative;">
+    ${curveStyleBack}
     <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
     <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
     <div style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2},${D.headerBg3});padding:${6*sc}px ${14*sc}px;display:flex;align-items:center;gap:${8*sc}px;position:relative;z-index:2;">
@@ -519,24 +589,24 @@ function makeBackHTML(s, w, h, canvasId) {
         <div style="font-size:${fs(6.5)}px;color:rgba(255,255,255,.85);font-style:italic;margin-top:${1*sc}px;">${schoolSettings.schoolAddr}</div>
       </div>
     </div>
-    <div style="padding:${8*sc}px ${16*sc}px ${6*sc}px;position:relative;z-index:2;">
+    <div style="padding:${4*sc}px ${16*sc}px ${3*sc}px;position:relative;z-index:2;">
       <table style="width:100%;border-collapse:collapse;font-size:${fs(7.5)}px;">
         <thead><tr style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2});">
-          <th style="padding:${5*sc}px ${8*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">Validity</th>
+          <th style="padding:${4*sc}px ${8*sc}px;border:${sc}px solid ${D.borderColor};text-align:center;color:${D.headerTextColor};font-weight:700;font-size:${fs(7.5)}px;font-family:'Montserrat',Arial,sans-serif;">Validity</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
-      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(35*sc)}" style="display:block;margin-bottom:${4*sc}px;"></canvas>
+    <div style="padding:${1*sc}px ${12*sc}px ${1*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
+      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(32*sc)}" style="display:block;"></canvas>
     </div>
-    <div style="padding:${1*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.55;background:${D.bodyBg};position:relative;z-index:2;">
-      <p style="margin:0 0 ${1*sc}px;color:#666;font-style:italic;font-size:${fs(7)}px;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
-      <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${1*sc}px;"></div>
-      <p style="margin:0 0 ${2*sc}px;font-weight:700;color:#c0392b;font-size:${fs(7.5)}px;">🆘 In case of emergency please notify:</p>
-      <p style="margin:0;font-weight:800;font-size:${fs(9)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;">${esc(s.emergencyName||"___________________")}</p>
-      <p style="margin:${2*sc}px 0 0;font-size:${fs(7.5)}px;"><span style="color:#777;font-weight:600;">Contact: </span>${esc(s.emergencyContact||"_______________")}</p>
-      <p style="margin:${1*sc}px 0 0;font-size:${fs(7)}px;"><span style="color:#777;font-weight:600;">Address: </span>${esc(s.emergencyAddress||"_______________")}</p>
+    <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.4;background:${D.bodyBg};position:relative;z-index:2;">
+      <p style="margin:0 0 ${1*sc}px;color:#666;font-style:italic;font-size:${fs(6.5)}px;line-height:1.35;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
+      <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${2*sc}px;"></div>
+      <p style="margin:0 0 ${1*sc}px;font-weight:700;color:#c0392b;font-size:${fs(7)}px;">🆘 In case of emergency please notify:</p>
+      <p style="margin:0 0 ${1*sc}px;font-weight:800;font-size:${fs(8.5)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;">${esc(s.emergencyName||"___________________")}</p>
+      <p style="margin:0 0 ${1*sc}px;font-size:${fs(7.5)}px;"><span style="color:#777;font-weight:600;">Contact: </span>${esc(s.emergencyContact||"_______________")}</p>
+      <p style="margin:0;font-size:${fs(7)}px;"><span style="color:#777;font-weight:600;">Address: </span>${esc(s.emergencyAddress||"_______________")}</p>
     </div>
     <div style="height:${6*sc}px;background:linear-gradient(90deg,${D.accentColor} 0%,${D.headerBg1} 50%,${D.accentColor} 100%);position:relative;z-index:2;"></div>
   </div>`;
@@ -595,6 +665,18 @@ function setPattern(p) {
   if (activeTab === "design") renderForm();
 }
 
+function setCardSize(scale) {
+  designSettings.cardScale = scale;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
+function setPaddingScale(val) {
+  designSettings.paddingScale = parseFloat(val);
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
 function setFontSize(base, name) {
   designSettings.baseFontSize = base;
   designSettings.nameFontSize = name;
@@ -649,15 +731,113 @@ function getBgPatternStyle(sc) {
   return "";
 }
 
+function getCurveDesign(sc, D) {
+  const style = D.curveStyle || "wave";
+  const c1 = D.accentColor || "#f9c30a";
+  const c2 = D.headerBg1 || "#1a5e23";
+  const c3 = D.headerBg3 || "#43a047";
+  const w = Math.round(220 * sc);
+  const h = Math.round(390 * sc);
+  if (style === "none") return "";
+  let paths = "";
+  if (style === "wave") {
+    paths = `
+      <path d="M0,${h*0.72} C${w*0.25},${h*0.62} ${w*0.5},${h*0.82} ${w},${h*0.7} L${w},${h} L0,${h} Z" fill="${c2}" opacity="0.10"/>
+      <path d="M0,${h*0.78} C${w*0.3},${h*0.68} ${w*0.65},${h*0.88} ${w},${h*0.76} L${w},${h} L0,${h} Z" fill="${c1}" opacity="0.12"/>
+      <path d="M0,${h*0.85} C${w*0.2},${h*0.76} ${w*0.7},${h*0.94} ${w},${h*0.83} L${w},${h} L0,${h} Z" fill="${c3}" opacity="0.14"/>`;
+  } else if (style === "bubbles") {
+    paths = `
+      <circle cx="${w*0.12}" cy="${h*0.68}" r="${w*0.22}" fill="${c2}" opacity="0.09"/>
+      <circle cx="${w*0.88}" cy="${h*0.75}" r="${w*0.26}" fill="${c1}" opacity="0.10"/>
+      <circle cx="${w*0.5}" cy="${h*0.9}" r="${w*0.18}" fill="${c3}" opacity="0.10"/>
+      <circle cx="${w*0.05}" cy="${h*0.92}" r="${w*0.14}" fill="${c1}" opacity="0.08"/>
+      <circle cx="${w*0.95}" cy="${h*0.6}" r="${w*0.12}" fill="${c2}" opacity="0.07"/>`;
+  } else if (style === "arc") {
+    paths = `
+      <path d="M0,${h*0.75} Q${w*0.5},${h*0.55} ${w},${h*0.75} L${w},${h} L0,${h} Z" fill="${c2}" opacity="0.12"/>
+      <path d="M0,${h*0.82} Q${w*0.5},${h*0.65} ${w},${h*0.82} L${w},${h} L0,${h} Z" fill="${c1}" opacity="0.13"/>`;
+  } else if (style === "ribbon") {
+    paths = `
+      <path d="M0,${h*0.6} L${w},${h*0.52} L${w},${h*0.62} L0,${h*0.70} Z" fill="${c1}" opacity="0.13"/>
+      <path d="M0,${h*0.73} L${w},${h*0.66} L${w},${h*0.73} L0,${h*0.8} Z" fill="${c2}" opacity="0.11"/>
+      <path d="M0,${h*0.84} L${w},${h*0.78} L${w},${h*0.85} L0,${h*0.91} Z" fill="${c3}" opacity="0.12"/>`;
+  } else if (style === "swirl") {
+    paths = `
+      <path d="M${w},0 C${w*0.6},${h*0.15} ${w*0.4},${h*0.3} ${w*0.7},${h*0.5} C${w},${h*0.7} ${w*0.8},${h*0.9} ${w},${h} L${w},0 Z" fill="${c1}" opacity="0.11"/>
+      <path d="M0,${h} C${w*0.3},${h*0.85} ${w*0.5},${h*0.7} ${w*0.25},${h*0.5} C0,${h*0.3} ${w*0.15},${h*0.1} 0,0 L0,${h} Z" fill="${c2}" opacity="0.10"/>`;
+  }
+  return `<svg style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">${paths}</svg>`;
+}
+
+const CURVE_STYLES = [
+  {id:"none", label:"None"},
+  {id:"wave", label:"Wave"},
+  {id:"bubbles", label:"Bubbles"},
+  {id:"arc", label:"Arc"},
+  {id:"ribbon", label:"Ribbon"},
+  {id:"swirl", label:"Swirl"},
+];
+
+/* ===== PRESET MANAGER ===== */
+let _userPresets = [];
+
+function loadUserPresets() {
+  return _userPresets;
+}
+
+function saveUserPresets(presets) {
+  _userPresets = presets;
+}
+
+function saveCurrentPreset() {
+  const nameInput = document.getElementById("preset-name-input");
+  const name = (nameInput ? nameInput.value : "").trim();
+  if (!name) { alert("Please enter a name for your preset."); return; }
+  const presets = loadUserPresets();
+  if (presets.find(p => p.name === name)) {
+    if (!confirm(`A preset named "${name}" already exists. Overwrite it?`)) return;
+    const idx = presets.findIndex(p => p.name === name);
+    presets[idx] = { name, settings: Object.assign({}, designSettings) };
+  } else {
+    presets.push({ name, settings: Object.assign({}, designSettings) });
+  }
+  saveUserPresets(presets);
+  if (nameInput) nameInput.value = "";
+  renderForm();
+}
+
+function loadPreset(name) {
+  const presets = loadUserPresets();
+  const preset = presets.find(p => p.name === name);
+  if (!preset) return;
+  Object.assign(designSettings, preset.settings);
+  renderCards();
+  renderForm();
+}
+
+function deletePreset(name) {
+  if (!confirm(`Delete preset "${name}"?`)) return;
+  const presets = loadUserPresets().filter(p => p.name !== name);
+  saveUserPresets(presets);
+  renderForm();
+}
+
+function setCurveStyle(s) {
+  designSettings.curveStyle = s;
+  renderCards();
+  if (activeTab === "design") renderForm();
+}
+
 function renderCards() {
   const area = document.getElementById("cards-area");
+  const dim = getCardDimensions();
   let html = "";
   students.forEach((s, i) => {
     html += `<div class="card-wrap"><div class="card-label">Student ${i+1}</div>`;
     if (activeSide === "front") {
-      html += makeFrontHTML(s, 260, 390);
+      html += makeFrontHTML(s, dim.w, dim.h);
     } else {
-      html += makeBackHTML(s, 260, 390, `bc_preview_${i}`);
+      html += makeBackHTML(s, dim.w, dim.h, `bc_preview_${i}`);
     }
     html += `</div>`;
   });
@@ -673,16 +853,51 @@ function renderCards() {
   updatePrintLayout();
 }
 
+function getIdsPerPage() {
+  const scale = designSettings.cardScale || 1.0;
+  if (scale >= 1.4) return 4;   // XL and XXL: 4 per page
+  if (scale >= 1.2) return 6;   // Large: 6 per page
+  return 9;                     // Small and Medium: all 9 on one page
+}
+
+function buildPageGroups(ids, perPage) {
+  const pages = [];
+  for (let i = 0; i < ids.length; i += perPage) {
+    pages.push(ids.slice(i, i + perPage));
+  }
+  return pages;
+}
+
 function updatePrintLayout() {
-  const fronts = document.getElementById("print-fronts");
-  const backs = document.getElementById("print-backs");
-  let fhtml = "", bhtml = "";
-  students.forEach((s, i) => {
-    fhtml += `<div>${makeFrontHTML(s, 260, 390)}</div>`;
-    bhtml += `<div>${makeBackHTML(s, 260, 390, `bc_print_${i}`)}</div>`;
+  const container = document.getElementById("print-pages");
+  const dim = getCardDimensions();
+  const perPage = getIdsPerPage();
+  const indices = students.map((_, i) => i);
+  const frontPages = buildPageGroups(indices, perPage);
+  const backPages = buildPageGroups(indices, perPage);
+
+  let html = "";
+
+  // Front pages
+  frontPages.forEach(group => {
+    html += `<div class="print-page">`;
+    group.forEach(i => {
+      html += `<div>${makeFrontHTML(students[i], dim.w, dim.h)}</div>`;
+    });
+    html += `</div>`;
   });
-  fronts.innerHTML = fhtml;
-  backs.innerHTML = bhtml;
+
+  // Back pages
+  backPages.forEach(group => {
+    html += `<div class="print-page">`;
+    group.forEach(i => {
+      html += `<div>${makeBackHTML(students[i], dim.w, dim.h, `bc_print_${i}`)}</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
   setTimeout(() => {
     students.forEach((s, i) => {
       const canvas = document.getElementById(`bc_print_${i}`);
@@ -709,61 +924,70 @@ async function handlePDF() {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a3" });
     const a3W = 297, a3H = 420;
+    const dim = getCardDimensions();
+    const perPage = getIdsPerPage();
+    const indices = students.map((_, i) => i);
+    const frontGroups = buildPageGroups(indices, perPage);
+    const backGroups = buildPageGroups(indices, perPage);
 
-    // FRONT PAGE
-    const containerFront = document.createElement("div");
-    containerFront.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:white;padding:60px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
-    let frontHtml = `<div style="display:grid;grid-template-columns:repeat(3,260px);gap:28px;justify-items:center;align-items:start;">`;
-    students.forEach((s) => { frontHtml += `<div>${makeFrontHTML(s, 260, 390)}</div>`; });
-    frontHtml += `</div>`;
-    containerFront.innerHTML = frontHtml;
-    document.body.appendChild(containerFront);
+    // Determine grid columns based on perPage and card width
+    function getGridCols(count) {
+      if (count <= 1) return 1;
+      if (count <= 2) return 2;
+      if (count <= 4) return 2;
+      if (count <= 6) return 3;
+      return 3;
+    }
 
-    await new Promise(r => setTimeout(r, 100));
-    const cvsFront = await html2canvas(containerFront, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
-    document.body.removeChild(containerFront);
+    async function renderPageGroup(group, isFront, pageIndex) {
+      const cols = getGridCols(group.length);
+      const container = document.createElement("div");
+      container.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:white;padding:60px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
+      let inner = `<div style="display:grid;grid-template-columns:repeat(${cols},${dim.w}px);gap:28px;justify-items:center;align-items:start;">`;
+      if (isFront) {
+        group.forEach(i => { inner += `<div>${makeFrontHTML(students[i], dim.w, dim.h)}</div>`; });
+      } else {
+        group.forEach(i => { inner += `<div>${makeBackHTML(students[i], dim.w, dim.h, `bc_pdf_p${pageIndex}_${i}`)}</div>`; });
+      }
+      inner += `</div>`;
+      container.innerHTML = inner;
+      document.body.appendChild(container);
 
-    const pxWFront = cvsFront.width / 2;
-    const pxHFront = cvsFront.height / 2;
-    const ratioFront = Math.min(a3W / pxWFront, a3H / pxHFront);
-    const pdfWFront = pxWFront * ratioFront;
-    const pdfHFront = pxHFront * ratioFront;
-    const offXFront = (a3W - pdfWFront) / 2;
-    const offYFront = Math.max(1, (a3H - pdfHFront) / 2);
+      await new Promise(r => setTimeout(r, 100));
 
-    const imgDataFront = cvsFront.toDataURL("image/jpeg", 0.95);
-    pdf.addImage(imgDataFront, "JPEG", offXFront, offYFront, pdfWFront, pdfHFront);
+      if (!isFront) {
+        group.forEach(i => {
+          const bc = document.getElementById(`bc_pdf_p${pageIndex}_${i}`);
+          if (bc && students[i].lrn) drawBarcode(students[i].lrn, bc);
+        });
+        await new Promise(r => setTimeout(r, 100));
+      }
 
-    // BACK PAGE
-    pdf.addPage();
-    const containerBack = document.createElement("div");
-    containerBack.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:white;padding:60px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
-    let backHtml = `<div style="display:grid;grid-template-columns:repeat(3,260px);gap:28px;justify-items:center;align-items:start;">`;
-    students.forEach((s, i) => { backHtml += `<div>${makeBackHTML(s, 260, 390, "bc_pdf_" + i)}</div>`; });
-    backHtml += `</div>`;
-    containerBack.innerHTML = backHtml;
-    document.body.appendChild(containerBack);
+      const cvs = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+      document.body.removeChild(container);
 
-    await new Promise(r => setTimeout(r, 100));
-    students.forEach((s, i) => {
-      const bc = document.getElementById("bc_pdf_" + i);
-      if (bc && s.lrn) drawBarcode(s.lrn, bc);
-    });
-    await new Promise(r => setTimeout(r, 100));
+      const pxW = cvs.width / 2;
+      const pxH = cvs.height / 2;
+      const ratio = Math.min(a3W / pxW, a3H / pxH);
+      const pdfW = pxW * ratio;
+      const pdfH = pxH * ratio;
+      const offX = (a3W - pdfW) / 2;
+      const offY = Math.max(1, (a3H - pdfH) / 2);
+      const imgData = cvs.toDataURL("image/jpeg", 0.95);
+      pdf.addImage(imgData, "JPEG", offX, offY, pdfW, pdfH);
+    }
 
-    const cvsBack = await html2canvas(containerBack, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
-    document.body.removeChild(containerBack);
+    // Render all front pages
+    for (let p = 0; p < frontGroups.length; p++) {
+      if (p > 0) pdf.addPage();
+      await renderPageGroup(frontGroups[p], true, p);
+    }
 
-    const pxWBack = cvsBack.width / 2;
-    const pxHBack = cvsBack.height / 2;
-    const ratioBack = Math.min(a3W / pxWBack, a3H / pxHBack);
-    const pdfWBack = pxWBack * ratioBack;
-    const pdfHBack = pxHBack * ratioBack;
-    const offXBack = (a3W - pdfWBack) / 2;
-    const offYBack = Math.max(1, (a3H - pdfHBack) / 2);
-
-    const imgDataBack = cvsBack.toDataURL("image/jpeg", 0.95);
-    pdf.addImage(imgDataBack, "JPEG", offXBack, offYBack, pdfWBack, pdfHBack);
+    // Render all back pages
+    for (let p = 0; p < backGroups.length; p++) {
+      pdf.addPage();
+      await renderPageGroup(backGroups[p], false, p);
+    }
 
     const name1 = (students[0].name || "Student1").split(" ")[0];
     const name2 = (students[1].name || "Student2").split(" ")[0];
