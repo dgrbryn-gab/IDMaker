@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student ID Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -33,22 +34,31 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
 
 /* ===== LAYOUT ===== */
 .main{display:flex;gap:14px;flex-wrap:wrap;}
-.form-panel{flex:1 1 290px;background:white;border-radius:14px;border:1px solid #c8e6c9;padding:14px;max-height:640px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.form-panel{flex:1 1 290px;background:white;border-radius:14px;border:1px solid #c8e6c9;padding:14px;max-height:calc(100vh - 120px);overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.08);}
 .preview-panel{flex:2 1 420px;}
 
 /* ===== TABS ===== */
-.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tabs{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.tabs-row{display:flex;gap:5px;}
 .tab-btn{
   flex:1;padding:9px 6px;font-size:11.5px;font-weight:700;border-radius:8px;cursor:pointer;
   border:2px solid #ddd;background:white;color:#666;transition:all .2s;
-  font-family:'Montserrat',sans-serif;letter-spacing:.3px;
+  font-family:'Montserrat',sans-serif;letter-spacing:.3px;position:relative;overflow:hidden;
 }
 .tab-btn.active{background:var(--green-dark);color:white;border-color:var(--green-dark);box-shadow:0 3px 10px rgba(27,94,32,.3);}
 .tab-btn:hover:not(.active){border-color:var(--green-mid);color:var(--green-mid);}
-.tab-settings{background:#fff8e1!important;color:#e65100!important;border-color:#ffcc02!important;font-size:11px!important;}
+.tab-settings{background:#fff8e1!important;color:#e65100!important;border-color:#ffcc02!important;}
 .tab-settings.active{background:#ff8f00!important;color:white!important;border-color:#ff8f00!important;}
-.tab-design{background:#f3e5f5!important;color:#6a1b9a!important;border-color:#ce93d8!important;font-size:11px!important;}
+.tab-design{background:#f3e5f5!important;color:#6a1b9a!important;border-color:#ce93d8!important;}
 .tab-design.active{background:#7b1fa2!important;color:white!important;border-color:#7b1fa2!important;}
+
+/* Completion Indicator */
+.tab-completion{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,.25);border-radius:0 0 8px 8px;overflow:hidden;display:none;}
+.tab-btn:not(.tab-settings):not(.tab-design) .tab-completion{display:block;}
+.tab-completion-bar{height:100%;background:linear-gradient(90deg,#7cb342,#9ccc65);transition:width .3s ease;box-shadow:inset 0 -1px 2px rgba(0,0,0,.2),0 0 3px rgba(124,179,66,.6);}
+.tab-completion-label{position:absolute;bottom:0;right:2px;font-size:8px;color:#888;font-weight:700;}
+.tab-btn.active .tab-completion-bar{background:linear-gradient(90deg,#66bb6a,#aed581);box-shadow:inset 0 -1px 2px rgba(0,0,0,.1),0 0 4px rgba(102,187,106,.8);}
+
 /* Color swatch */
 .swatch-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
 .swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0;}
@@ -163,18 +173,30 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
 <div class="main">
   <!-- FORM PANEL -->
   <div class="form-panel no-print">
+    <div style="background:#e8f5e9;border:1.5px solid #4caf50;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;line-height:1.4;">
+      <div style="font-weight:700;color:#1b5e20;margin-bottom:6px;">📊 Bulk Import / Export CSV</div>
+      <div style="color:#2e7d32;margin-bottom:8px;font-size:10px;">Load or save all students at once:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls" onchange="handleCSVFile(event)" style="flex:1;min-width:120px;padding:6px 8px;font-size:10px;border:1.5px solid #4caf50;border-radius:6px;background:white;cursor:pointer;">
+        <button onclick="exportStudentsToCSV()" style="padding:6px 10px;font-size:10px;font-weight:700;background:#1565c0;color:white;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">⬇ Export CSV</button>
+      </div>
+    </div>
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab(0)">👤 S1</button>
-      <button class="tab-btn" onclick="switchTab(1)">👤 S2</button>
-      <button class="tab-btn" onclick="switchTab(2)">👤 S3</button>
-      <button class="tab-btn" onclick="switchTab(3)">👤 S4</button>
-      <button class="tab-btn" onclick="switchTab(4)">👤 S5</button>
-      <button class="tab-btn" onclick="switchTab(5)">👤 S6</button>
-      <button class="tab-btn" onclick="switchTab(6)">👤 S7</button>
-      <button class="tab-btn" onclick="switchTab(7)">👤 S8</button>
-      <button class="tab-btn" onclick="switchTab(8)">👤 S9</button>
-      <button class="tab-btn tab-settings" onclick="switchToSchoolSettings()">🏫 School</button>
-      <button class="tab-btn tab-design" onclick="switchToDesign()">🎨 Design</button>
+      <div class="tabs-row">
+        <button class="tab-btn active" onclick="switchTab(0)">👤 S1</button>
+        <button class="tab-btn" onclick="switchTab(1)">👤 S2</button>
+        <button class="tab-btn" onclick="switchTab(2)">👤 S3</button>
+        <button class="tab-btn" onclick="switchTab(3)">👤 S4</button>
+        <button class="tab-btn" onclick="switchTab(4)">👤 S5</button>
+        <button class="tab-btn" onclick="switchTab(5)">👤 S6</button>
+        <button class="tab-btn" onclick="switchTab(6)">👤 S7</button>
+        <button class="tab-btn" onclick="switchTab(7)">👤 S8</button>
+        <button class="tab-btn" onclick="switchTab(8)">👤 S9</button>
+      </div>
+      <div class="tabs-row">
+        <button class="tab-btn tab-settings" onclick="switchToSchoolSettings()">🏫 School Settings</button>
+        <button class="tab-btn tab-design" onclick="switchToDesign()">🎨 Design</button>
+      </div>
     </div>
     <div id="form-fields"></div>
   </div>
@@ -191,7 +213,7 @@ body{font-family:'Open Sans',sans-serif;background:linear-gradient(135deg,#e8f5e
       <button class="btn-pdf" id="pdf-btn" onclick="handlePDF()">📄 Export PDF (Front &amp; Back)</button>
     </div>
     <div class="tip no-print">
-      💡 Fill in all 9 students (S1-S9). <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all 9 IDs ready to cut and laminate.
+      💡 Fill in all 9 students (S1–S9). <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all 9 IDs ready to cut and laminate. <b>⚠️ Print is optimized for A3 paper</b> — if using A4/Letter, choose "Fit to page" in your print dialog.
     </div>
   </div>
 </div>
@@ -231,7 +253,10 @@ const designSettings = {
   bgPattern: "none",
   signatureHeight: 22,
   signatureOpacity: 1,
-  curveStyle: "wave"
+  curveStyle: "wave",
+  fontFamily: "'Open Sans',Arial,sans-serif",
+  cardScale: 1.0,
+  paddingScale: 1.0
 };
 
 const PRESET_THEMES = [
@@ -274,9 +299,7 @@ const CARD_SIZES = [
   {label:"XXL (8.2×15.6cm)", scale:1.6, w:416, h:624},
 ];
 
-designSettings.fontFamily = FONT_FAMILIES[0].val;
-designSettings.cardScale = 1.0;
-designSettings.paddingScale = 1.0;
+
 
 const STUDENT_FIELDS = [
   {k:"name", lbl:"Full Name (ALL CAPS)", ph:"Enter student name", section:"Student Info"},
@@ -298,41 +321,95 @@ const SCHOOL_FIELDS = [
   {k:"pTitle", lbl:"Principal Title", ph:"Enter principal title"},
 ];
 
-let students = [{},{},{},{},{},{},{},{},{}];
+function blankStudent() {
+  return {name:"",lrn:"",grade:"",section:"",gender:"",address:"",emergencyName:"",emergencyContact:"",emergencyAddress:"",photo:null};
+}
+
+let students = Array.from({length:9}, () => blankStudent());
 let activeTab = 0;
 let activeSide = "front";
 let renderTimeout = null;
+
+/* ===== COMPLETION CALCULATION ===== */
+const STORAGE_KEY_STUDENTS = "idmaker_students";
+const STORAGE_KEY_DESIGN = "idmaker_design";
+const STORAGE_KEY_SCHOOL = "idmaker_school";
+const AUTO_SAVE_DELAY = 1000; // ms
+let autoSaveTimeout = null;
+
+function autoSave() {
+  clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(() => {
+    localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+    localStorage.setItem(STORAGE_KEY_DESIGN, JSON.stringify(designSettings));
+    localStorage.setItem(STORAGE_KEY_SCHOOL, JSON.stringify(schoolSettings));
+    console.log("✓ Auto-saved to browser storage");
+  }, AUTO_SAVE_DELAY);
+}
+
+function loadFromStorage() {
+  try {
+    const savedStudents = localStorage.getItem(STORAGE_KEY_STUDENTS);
+    if (savedStudents) students = JSON.parse(savedStudents);
+    
+    const savedDesign = localStorage.getItem(STORAGE_KEY_DESIGN);
+    if (savedDesign) Object.assign(designSettings, JSON.parse(savedDesign));
+    
+    const savedSchool = localStorage.getItem(STORAGE_KEY_SCHOOL);
+    if (savedSchool) Object.assign(schoolSettings, JSON.parse(savedSchool));
+    
+    console.log("✓ Loaded from browser storage");
+  } catch (e) {
+    console.warn("Could not restore from storage:", e);
+  }
+}
 
 function getCardDimensions() {
   const size = CARD_SIZES.find(s => s.scale === designSettings.cardScale) || CARD_SIZES[1];
   return { w: Math.round(size.w * (designSettings.paddingScale || 1.0)), h: Math.round(size.h * (designSettings.paddingScale || 1.0)) };
 }
 
-function blankStudent() {
-  return {name:"",lrn:"",grade:"",section:"",gender:"",address:"",emergencyName:"",emergencyContact:"",emergencyAddress:"",photo:null};
+/* ===== COMPLETION CALCULATION ===== */
+function getStudentCompletion(studentObj) {
+  const fields = ["name", "lrn", "grade", "section", "gender", "address", "emergencyName", "emergencyContact", "emergencyAddress"];
+  const totalFields = fields.length + 1; // +1 for photo
+  let filledCount = 0;
+  
+  fields.forEach(field => {
+    const val = studentObj[field];
+    if (val && String(val).trim().length > 0) filledCount++;
+  });
+  if (studentObj.photo) filledCount++;
+  
+  return Math.round((filledCount / totalFields) * 100);
 }
-for (let i = 0; i < 9; i++) { students[i] = blankStudent(); }
 
 function debouncedRender() {
   clearTimeout(renderTimeout);
-  renderTimeout = setTimeout(renderCards, 300);
+  renderTimeout = setTimeout(() => {
+    renderCards();
+    updateTabIndicators();
+  }, 300);
 }
 
 function switchTab(i) {
   activeTab = i;
-  document.querySelectorAll(".tab-btn").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tabs-row:first-child .tab-btn")[i].classList.add("active");
   renderForm();
 }
 
 function switchToSchoolSettings() {
   activeTab = "settings";
-  document.querySelectorAll(".tab-btn").forEach((b,i)=>{b.classList.toggle("active",i===9);});
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(".tab-settings").classList.add("active");
   renderForm();
 }
 
 function switchToDesign() {
   activeTab = "design";
-  document.querySelectorAll(".tab-btn").forEach((b,i)=>{b.classList.toggle("active",i===10);});
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(".tab-design").classList.add("active");
   renderForm();
 }
 
@@ -342,6 +419,21 @@ function switchSide(side) {
   renderCards();
 }
 
+function updateTabIndicators() {
+  const studentBtns = document.querySelectorAll(".tabs-row:first-child .tab-btn");
+  for (let i = 0; i < 9; i++) {
+    const btn = studentBtns[i];
+    if (!btn) continue;
+    const completion = getStudentCompletion(students[i]);
+    const oldIndicator = btn.querySelector(".tab-completion");
+    if (oldIndicator) oldIndicator.remove();
+    const indicator = document.createElement("div");
+    indicator.className = "tab-completion";
+    indicator.innerHTML = `<div class="tab-completion-bar" style="width:${completion}%"></div>`;
+    btn.appendChild(indicator);
+  }
+}
+
 function renderForm() {
   const container = document.getElementById("form-fields");
   let html = "";
@@ -349,14 +441,27 @@ function renderForm() {
   if (activeTab === "settings") {
     html += `<div class="section-divider">🏫 School Settings</div>`;
     SCHOOL_FIELDS.forEach(f => {
+      const isUpper = f.k === "schoolName" || f.k === "principal";
       html += `<div class="field"><label>${f.lbl}</label>
-        <input type="text" value="${esc(schoolSettings[f.k]||"")}" placeholder="${f.ph}" oninput="updateSchoolField('${f.k}',this.value)">
+        <input type="text" value="${esc(schoolSettings[f.k]||"")}" placeholder="${f.ph}"
+          ${isUpper ? `style="text-transform:uppercase;" oninput="forceUpper(this);updateSchoolField('${f.k}',this.value)"` : `oninput="updateSchoolField('${f.k}',this.value)"`}>
       </div>`;
     });
+    html += `<div class="section-divider" style="margin-top:12px;">📅 School Years (Validity)</div>`;
+    html += `<div class="field"><label>School Years (comma-separated)</label>
+      <input type="text" value="${esc(schoolSettings.sys||"")}" placeholder="e.g. 2026-2027,2027-2028" oninput="updateSchoolField('sys',this.value)">
+      <div style="font-size:9.5px;color:#888;margin-top:3px;">Each year becomes a row on the back of the ID card.</div>
+    </div>`;
     html += `<div class="section-divider" style="margin-top:12px;">📸 Shared Images (for both students)</div>`;
-    html += `<div class="field"><label>School Logo / Seal</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'schoolLogo')"></div>`;
-    html += `<div class="field"><label>DepEd Logo</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'depedLogo')"></div>`;
-    html += `<div class="field"><label>Principal Signature</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'principalSignature')"></div>`;
+    html += `<div class="field"><label>School Logo / Seal</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'schoolLogo')">`;
+    if (schoolSettings.schoolLogo) html += `<div style="margin-top:5px;display:flex;align-items:center;gap:6px;"><img src="${schoolSettings.schoolLogo}" style="height:32px;border-radius:4px;border:1px solid #ccc;object-fit:contain;"> <span style="font-size:10px;color:#2e7d32;font-weight:700;">✓ Uploaded</span></div>`;
+    html += `</div>`;
+    html += `<div class="field"><label>DepEd Logo</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'depedLogo')">`;
+    if (schoolSettings.depedLogo) html += `<div style="margin-top:5px;display:flex;align-items:center;gap:6px;"><img src="${schoolSettings.depedLogo}" style="height:32px;border-radius:4px;border:1px solid #ccc;object-fit:contain;"> <span style="font-size:10px;color:#2e7d32;font-weight:700;">✓ Uploaded</span></div>`;
+    html += `</div>`;
+    html += `<div class="field"><label>Principal Signature</label><input type="file" accept="image/*" onchange="handleSchoolImage(event,'principalSignature')">`;
+    if (schoolSettings.principalSignature) html += `<div style="margin-top:5px;display:flex;align-items:center;gap:6px;"><img src="${schoolSettings.principalSignature}" style="height:28px;border-radius:4px;border:1px solid #ccc;object-fit:contain;background:#f9f9f9;padding:2px;"> <span style="font-size:10px;color:#2e7d32;font-weight:700;">✓ Uploaded</span></div>`;
+    html += `</div>`;
   } else if (activeTab === "design") {
     html += `<div class="section-divider">🎨 Quick Theme Presets</div>`;
     html += `<div class="pattern-row" style="flex-wrap:wrap;">`;
@@ -453,22 +558,68 @@ function renderForm() {
         html += `<div class="section-divider">${f.section === "Student Info" ? "👤" : "🆘"} ${f.section}</div>`;
         lastSection = f.section;
       }
+      const isUpperField = f.k === "name" || f.k === "section" || f.k === "gender" || f.k === "emergencyName";
       html += `<div class="field"><label>${f.lbl}</label>
-        <input type="text" value="${esc(students[activeTab][f.k]||"")}" placeholder="${f.ph}" oninput="updateField('${f.k}',this.value)">
+        <input type="text" value="${esc(students[activeTab][f.k]||"")}" placeholder="${f.ph}"
+          ${isUpperField ? `style="text-transform:uppercase;" oninput="forceUpper(this);updateField('${f.k}',this.value)"` : `oninput="updateField('${f.k}',this.value)"`}>
       </div>`;
     });
     html += `<div class="section-divider">📸 Images</div>`;
-    html += `<div class="field"><label>Student Photo</label><input type="file" accept="image/*" onchange="handlePhoto(event)"></div>`;
+    html += `<div class="field"><label>Student Photo</label><input type="file" accept="image/*" onchange="handlePhoto(event)">`;
+    if (students[activeTab].photo) {
+      html += `<div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+        <img src="${students[activeTab].photo}" style="width:48px;height:56px;object-fit:cover;border-radius:4px;border:1.5px solid #ccc;">
+        <div>
+          <div style="font-size:10px;color:#2e7d32;font-weight:700;margin-bottom:4px;">✓ Photo uploaded</div>
+          <button onclick="clearStudentPhoto()" style="padding:3px 8px;font-size:9.5px;font-weight:700;background:#ffebee;color:#c62828;border:1.5px solid #ef9a9a;border-radius:5px;cursor:pointer;">✕ Remove</button>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+    
+    // Copy data section - always visible
+    html += `<div class="section-divider" style="margin-top:14px;">📋 Copy to Other Slots</div>`;
+    html += `<div style="background:#e3f2fd;border:1.5px solid #1976d2;border-radius:8px;padding:10px;">`;
+    html += `<div style="font-size:10px;color:#0d47a1;margin-bottom:8px;font-weight:700;">Copy Grade & Section from S${activeTab+1} to:</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">`;
+    for (let i = 0; i < 9; i++) {
+      if (i !== activeTab) {
+        html += `<button style="padding:6px 8px;font-size:10px;font-weight:700;background:#1976d2;color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;" onclick="copyStudentData(${activeTab},${i})">→ S${i+1}</button>`;
+      }
+    }
+    html += `</div>`;
+    html += `<div style="font-size:9px;color:#555;margin-top:6px;font-style:italic;">Only Grade & Section will be copied. Other data stays untouched.</div>`;
+    html += `</div>`;
+    // Clear slot button
+    html += `<div class="section-divider" style="margin-top:14px;">🗑️ Reset This Slot</div>`;
+    html += `<div style="background:#ffebee;border:1.5px solid #ef9a9a;border-radius:8px;padding:10px;">`;
+    html += `<button onclick="clearStudent(${activeTab})" style="width:100%;padding:8px;font-size:11px;font-weight:700;background:#c62828;color:white;border:none;border-radius:6px;cursor:pointer;font-family:'Montserrat',sans-serif;">✕ Clear S${activeTab+1} Data</button>`;
+    html += `<div style="font-size:9px;color:#888;margin-top:5px;font-style:italic;">Removes all data including photo for this student slot.</div>`;
+    html += `</div>`;
+    html += `<div class="section-divider" style="margin-top:14px;">⚠️ Reset All</div>`;
+    html += `<div style="background:#fbe9e7;border:1.5px solid #ff8a65;border-radius:8px;padding:10px;">`;
+    html += `<button onclick="clearAllStudents()" style="width:100%;padding:8px;font-size:11px;font-weight:700;background:#bf360c;color:white;border:none;border-radius:6px;cursor:pointer;font-family:'Montserrat',sans-serif;">🗑️ Clear All 9 Students</button>`;
+    html += `<div style="font-size:9px;color:#888;margin-top:5px;font-style:italic;">Permanently removes all data for every student slot.</div>`;
+    html += `</div>`;
   }
   container.innerHTML = html;
+  document.querySelector(".form-panel").scrollTop = 0;
+  updateTabIndicators();
 }
 
-function updateField(k, v) { students[activeTab][k] = v; debouncedRender(); }
-function updateSchoolField(k, v) { schoolSettings[k] = v; renderCards(); }
+function forceUpper(el) {
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  el.value = el.value.toUpperCase();
+  el.setSelectionRange(start, end);
+}
+
+function updateField(k, v) { students[activeTab][k] = v; debouncedRender(); autoSave(); }
+function updateSchoolField(k, v) { schoolSettings[k] = v; renderCards(); autoSave(); }
 
 function handlePhoto(e) {
   const file = e.target.files[0]; if (!file) return;
-  const r = new FileReader(); r.onload = ev => { students[activeTab].photo = ev.target.result; renderCards(); };
+  const r = new FileReader(); r.onload = ev => { students[activeTab].photo = ev.target.result; renderCards(); autoSave(); };
   r.readAsDataURL(file);
 }
 
@@ -477,11 +628,187 @@ function handleSchoolImage(e, type) {
   const r = new FileReader(); r.onload = ev => {
     schoolSettings[type] = ev.target.result;
     renderCards();
+    autoSave();
   }; r.readAsDataURL(file);
 }
 
 function esc(str) {
   return String(str).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ===================== CSV IMPORT ===================== */
+function parseCSV(csvText) {
+  // Normalize line endings (Windows \r\n and old Mac \r -> \n)
+  const lines = csvText.trim().replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const rows = [];
+  let inQuotes = false;
+  let currentRow = [];
+  let currentField = "";
+
+  for (let line of lines) {
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          currentField += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === "," && !inQuotes) {
+        currentRow.push(currentField.trim());
+        currentField = "";
+      } else {
+        currentField += char;
+      }
+    }
+    currentRow.push(currentField.trim());
+    currentField = "";
+    if (currentRow.some(f => f !== "")) rows.push(currentRow); // skip empty lines
+    currentRow = [];
+  }
+
+  return rows;
+}
+
+function guessColumnIndex(headers, keywords) {
+  const h = headers.map(x => x.toLowerCase().trim());
+  for (let kw of keywords) {
+    const idx = h.findIndex(col => col.includes(kw.toLowerCase()));
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function importStudentsFromCSV(csvText) {
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) {
+    alert("CSV must have headers and at least 1 data row.");
+    return false;
+  }
+
+  const headers = rows[0];
+  const nameIdx = guessColumnIndex(headers, ["name", "full name", "fullname", "student name", "fname"]);
+  const lrnIdx = guessColumnIndex(headers, ["lrn", "learner", "id", "studentid", "student_id"]);
+  const gradeIdx = guessColumnIndex(headers, ["grade", "year", "level"]);
+  const sectionIdx = guessColumnIndex(headers, ["section", "class", "room"]);
+  const genderIdx = guessColumnIndex(headers, ["gender", "sex"]);
+  const addressIdx = guessColumnIndex(headers, ["address", "home address", "homeaddress"]);
+  const emergencyNameIdx = guessColumnIndex(headers, ["emergency", "emergency name", "emergencyname", "guardian", "parent"]);
+  const emergencyContactIdx = guessColumnIndex(headers, ["contact", "phone", "emergency contact", "emergencycontact", "mobile"]);
+  const emergencyAddressIdx = guessColumnIndex(headers, ["emergency address", "emergencyaddress", "guardian address"]);
+
+  let importedCount = 0;
+  for (let i = 1; i < rows.length && i - 1 < 9; i++) {
+    const row = rows[i];
+    const student = blankStudent();
+    
+    if (nameIdx !== -1 && row[nameIdx]) student.name = row[nameIdx].toUpperCase();
+    if (lrnIdx !== -1 && row[lrnIdx]) student.lrn = row[lrnIdx];
+    if (gradeIdx !== -1 && row[gradeIdx]) student.grade = row[gradeIdx];
+    if (sectionIdx !== -1 && row[sectionIdx]) student.section = row[sectionIdx];
+    if (genderIdx !== -1 && row[genderIdx]) student.gender = row[genderIdx];
+    if (addressIdx !== -1 && row[addressIdx]) student.address = row[addressIdx];
+    if (emergencyNameIdx !== -1 && row[emergencyNameIdx]) student.emergencyName = row[emergencyNameIdx];
+    if (emergencyContactIdx !== -1 && row[emergencyContactIdx]) student.emergencyContact = row[emergencyContactIdx];
+    if (emergencyAddressIdx !== -1 && row[emergencyAddressIdx]) student.emergencyAddress = row[emergencyAddressIdx];
+
+    students[i - 1] = student;
+    importedCount++;
+  }
+
+  autoSave();
+  renderForm();
+  renderCards();
+  alert(`✓ Imported ${importedCount} student(s) from CSV!`);
+  return true;
+}
+
+function handleCSVFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const ext = file.name.split(".").pop().toLowerCase();
+  if (ext === "xlsx" || ext === "xls") {
+    // Excel file: use SheetJS
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csvText = XLSX.utils.sheet_to_csv(ws);
+        importStudentsFromCSV(csvText);
+      } catch (err) {
+        alert("Could not read Excel file. Try saving it as CSV first.");
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV or plain text
+    const reader = new FileReader();
+    reader.onload = (ev) => { importStudentsFromCSV(ev.target.result); };
+    reader.readAsText(file);
+  }
+}
+
+function exportStudentsToCSV() {
+  const headers = ["Name","LRN","Grade","Section","Gender","Address","Emergency Name","Emergency Contact","Emergency Address"];
+  const rows = students.map(s => [
+    s.name||"", s.lrn||"", s.grade||"", s.section||"",
+    s.gender||"", s.address||"", s.emergencyName||"",
+    s.emergencyContact||"", s.emergencyAddress||""
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const school = (schoolSettings.schoolName||"Students").replace(/[^a-zA-Z0-9]/g,"_").slice(0,20);
+  a.download = school + "_ID_Data.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleCSVPaste(text) {
+  if (!text || !text.trim()) return;
+  importStudentsFromCSV(text);
+}
+
+function clearAllStudents() {
+  if (!confirm("Clear all data for all 9 students? This cannot be undone.")) return;
+  students = Array.from({length:9}, () => blankStudent());
+  autoSave();
+  renderForm();
+  renderCards();
+}
+
+function clearStudent(idx) {
+  if (!confirm(`Clear all data for S${idx+1}? This cannot be undone.`)) return;
+  students[idx] = blankStudent();
+  autoSave();
+  renderForm();
+  renderCards();
+}
+
+function clearStudentPhoto() {
+  students[activeTab].photo = null;
+  autoSave();
+  renderForm();
+  renderCards();
+}
+
+/* ===================== COPY DATA BETWEEN SLOTS ===================== */
+function copyStudentData(fromIdx, toIdx) {
+  const source = students[fromIdx];
+  if (!source) return;
+  students[toIdx].grade = source.grade;
+  students[toIdx].section = source.section;
+  autoSave();
+  renderForm();
+  renderCards();
+  alert(`✓ Grade & Section copied from S${fromIdx+1} to S${toIdx+1}!`);
 }
 
 /* ===================== FRONT CARD ===================== */
@@ -656,24 +983,28 @@ function setDesign(k, v) {
   if (k === "headerBg1") { designSettings.footerBg1 = v; designSettings.footerBg2 = designSettings.headerBg2; }
   if (k === "headerBg3") { designSettings.headerBg2 = v; designSettings.footerBg2 = v; }
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setPattern(p) {
   designSettings.bgPattern = p;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setCardSize(scale) {
   designSettings.cardScale = scale;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setPaddingScale(val) {
   designSettings.paddingScale = parseFloat(val);
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
@@ -681,24 +1012,28 @@ function setFontSize(base, name) {
   designSettings.baseFontSize = base;
   designSettings.nameFontSize = name;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setFontFamily(ff) {
   designSettings.fontFamily = ff;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setSignatureHeight(val) {
   designSettings.signatureHeight = parseInt(val);
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
 function setSignatureOpacity(val) {
   designSettings.signatureOpacity = parseInt(val) / 100;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
@@ -716,6 +1051,7 @@ function applyTheme(i) {
   designSettings.footerBg1 = t.f1;
   designSettings.footerBg2 = t.f2;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
@@ -780,13 +1116,25 @@ const CURVE_STYLES = [
 
 /* ===== PRESET MANAGER ===== */
 let _userPresets = [];
+const STORAGE_KEY_PRESETS = "idmaker_presets";
 
 function loadUserPresets() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_PRESETS);
+    if (saved) _userPresets = JSON.parse(saved);
+  } catch (e) {
+    console.warn("Could not load presets from storage:", e);
+  }
   return _userPresets;
 }
 
 function saveUserPresets(presets) {
   _userPresets = presets;
+  try {
+    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+  } catch (e) {
+    console.warn("Could not save presets to storage:", e);
+  }
 }
 
 function saveCurrentPreset() {
@@ -803,6 +1151,7 @@ function saveCurrentPreset() {
   }
   saveUserPresets(presets);
   if (nameInput) nameInput.value = "";
+  autoSave();
   renderForm();
 }
 
@@ -812,6 +1161,7 @@ function loadPreset(name) {
   if (!preset) return;
   Object.assign(designSettings, preset.settings);
   renderCards();
+  autoSave();
   renderForm();
 }
 
@@ -819,12 +1169,14 @@ function deletePreset(name) {
   if (!confirm(`Delete preset "${name}"?`)) return;
   const presets = loadUserPresets().filter(p => p.name !== name);
   saveUserPresets(presets);
+  autoSave();
   renderForm();
 }
 
 function setCurveStyle(s) {
   designSettings.curveStyle = s;
   renderCards();
+  autoSave();
   if (activeTab === "design") renderForm();
 }
 
@@ -851,6 +1203,7 @@ function renderCards() {
     }, 60);
   }
   updatePrintLayout();
+  updateTabIndicators();
 }
 
 function getIdsPerPage() {
@@ -989,9 +1342,10 @@ async function handlePDF() {
       await renderPageGroup(backGroups[p], false, p);
     }
 
+    const schoolPrefix = (schoolSettings.schoolName || "School").replace(/[^a-zA-Z0-9]/g,"_").slice(0,12);
     const name1 = (students[0].name || "Student1").split(" ")[0];
     const name2 = (students[1].name || "Student2").split(" ")[0];
-    pdf.save("AGMFS_ID_" + name1 + "_" + name2 + ".pdf");
+    pdf.save(schoolPrefix + "_ID_" + name1 + "_" + name2 + ".pdf");
 
   } catch(err) {
     console.error("PDF error:", err);
@@ -1011,8 +1365,11 @@ function loadScript(src) {
   });
 }
 
+// Load from storage on page init, then render
+loadFromStorage();
 renderForm();
 renderCards();
+updateTabIndicators();
 </script>
 </body>
 </html>
