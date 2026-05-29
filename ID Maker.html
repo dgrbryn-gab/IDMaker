@@ -6,6 +6,7 @@
 <title>Student ID Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -418,7 +419,8 @@ const designSettings = {
   watermarkEnabled: false,
   watermarkText: "VALID",
   watermarkOpacity: 0.08,
-  watermarkColor: "#1a5e23"
+  watermarkColor: "#1a5e23",
+  codeMode: "barcode"
 };
 
 const PRESET_THEMES = [
@@ -750,6 +752,15 @@ function renderForm() {
       html += `<button class="pattern-btn${active}" onclick="setCurveStyle('${cs.id}')">${cs.label}</button>`;
     });
     html += `</div>`;
+
+    html += `<div class="section-divider" style="margin-top:12px;">📊 Barcode / QR Code</div>`;
+    html += `<div class="pattern-row">`;
+    [["barcode","▦ Barcode"],["qr","⬛ QR Code"],["both","▦⬛ Both"]].forEach(([id,label]) => {
+      const active = (designSettings.codeMode||"barcode") === id ? " active" : "";
+      html += `<button class="pattern-btn${active}" onclick="setCodeMode('${id}')">${label}</button>`;
+    });
+    html += `</div>`;
+    html += `<div style="font-size:9.5px;color:var(--text3);margin-top:4px;">QR encodes the student's LRN. Both shows barcode + QR side by side.</div>`;
 
     html += `<div class="section-divider" style="margin-top:12px;">💧 Watermark</div>`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -1187,8 +1198,9 @@ function makeBackHTML(s, w, h, canvasId) {
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="padding:${1*sc}px ${12*sc}px ${1*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
-      <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(32*sc)}" style="display:block;"></canvas>
+    <div style="padding:${1*sc}px ${12*sc}px ${1*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;gap:${6*sc}px;position:relative;z-index:2;">
+      ${D.codeMode !== "qr" ? `<canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(32*sc)}" style="display:block;"></canvas>` : ""}
+      ${D.codeMode !== "barcode" ? `<div id="${canvasId}_qr" style="width:${Math.round(48*sc)}px;height:${Math.round(48*sc)}px;background:#fff;flex-shrink:0;"></div>` : ""}
     </div>
     <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.4;background:${D.bodyBg};position:relative;z-index:2;text-align:center;">
       <p style="margin:0 0 ${1*sc}px;color:#666;font-style:italic;font-size:${fs(6.5)}px;line-height:1.35;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
@@ -1239,7 +1251,33 @@ function drawBarcode(lrn, canvas) {
   ctx.fillText(segs.join(" "), w/2, h);
 }
 
-/* ===================== RENDER ===================== */
+/* ===================== QR CODE ===================== */
+function drawQR(lrn, containerId, size) {
+  const el = document.getElementById(containerId);
+  if (!el || !lrn) return;
+  el.innerHTML = "";
+  try {
+    new QRCode(el, {
+      text: lrn,
+      width: size,
+      height: size,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) { console.warn("QR error:", e); }
+}
+
+function drawCode(lrn, canvasId, qrSize) {
+  const mode = designSettings.codeMode || "barcode";
+  if (mode !== "qr") {
+    const bc = document.getElementById(canvasId);
+    if (bc && lrn) drawBarcode(lrn, bc);
+  }
+  if (mode !== "barcode") {
+    drawQR(lrn, canvasId + "_qr", qrSize || 48);
+  }
+}
 function setDesign(k, v) {
   designSettings[k] = v;
   // keep footerBg in sync with header
@@ -1504,8 +1542,7 @@ function renderCarousel() {
         ${backHtml}
       </div>`;
     setTimeout(() => {
-      const bc = document.getElementById("bc_sbs");
-      if (bc && s.lrn) drawBarcode(s.lrn, bc);
+      if (s.lrn) drawCode(s.lrn, "bc_sbs", Math.round(48 * dim.w / 220));
     }, 60);
   } else {
     // Normal single-side mode
@@ -1522,8 +1559,7 @@ function renderCarousel() {
     card.innerHTML = html;
     if (activeSide === "back") {
       setTimeout(() => {
-        const canvas = document.getElementById("bc_carousel");
-        if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+        if (s.lrn) drawCode(s.lrn, "bc_carousel", Math.round(48 * dim.w / 220));
       }, 60);
     }
   }
@@ -1621,9 +1657,9 @@ function updatePrintLayout() {
   container.innerHTML = html;
 
   setTimeout(() => {
+    const qrSize = Math.round(48 * dim.w / 220);
     students.forEach((s, i) => {
-      const canvas = document.getElementById(`bc_print_${i}`);
-      if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+      if (s.lrn) drawCode(s.lrn, `bc_print_${i}`, qrSize);
     });
   }, 60);
 }
@@ -1682,11 +1718,11 @@ async function handlePDF() {
       await new Promise(r => setTimeout(r, 100));
 
       if (!isFront) {
+        const qrSize = Math.round(48 * dim.w / 220);
         group.forEach(i => {
-          const bc = document.getElementById(`bc_pdf_p${pageIndex}_${i}`);
-          if (bc && students[i].lrn) drawBarcode(students[i].lrn, bc);
+          if (students[i].lrn) drawCode(students[i].lrn, `bc_pdf_p${pageIndex}_${i}`, qrSize);
         });
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 200));
       }
 
       const cvs = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
@@ -1795,6 +1831,13 @@ function downloadExcelTemplate() {
 }
 
 /* ===================== WATERMARK CONTROLS ===================== */
+function setCodeMode(mode) {
+  designSettings.codeMode = mode;
+  renderCards();
+  autoSave();
+  if (activeTab === "design") renderForm();
+}
+
 function toggleWatermark() {
   designSettings.watermarkEnabled = !designSettings.watermarkEnabled;
   renderCards();
