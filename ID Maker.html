@@ -587,7 +587,7 @@ function renderForm() {
   if (activeTab === "settings") {
     html += `<div class="section-divider">🏫 School Settings</div>`;
     SCHOOL_FIELDS.forEach(f => {
-      const isUpper = f.k === "schoolName" || f.k === "principal";
+      const isUpper = f.k === "schoolName";
       html += `<div class="field"><label>${f.lbl}</label>
         <input type="text" value="${esc(schoolSettings[f.k]||"")}" placeholder="${f.ph}"
           ${isUpper ? `style="text-transform:uppercase;" oninput="forceUpper(this);updateSchoolField('${f.k}',this.value)"` : `oninput="updateSchoolField('${f.k}',this.value)"`}>
@@ -1024,7 +1024,7 @@ function makeFrontHTML(s, w, h) {
       </div>
     </div>
     <div style="padding:0 ${10*sc}px ${4*sc}px;font-size:${fs(8)}px;position:relative;z-index:2;">
-      <div style="margin-bottom:${2*sc}px;"><span style="color:#777;font-weight:600;">Gender: </span><b style="color:${D.infoFontColor};">${esc(s.gender||"")}</b></div>
+      <div style="margin-bottom:${2*sc}px;"><span style="color:#777;font-weight:600;">Sex: </span><b style="color:${D.infoFontColor};">${esc(s.gender||"")}</b></div>
       <div><span style="color:#777;font-weight:600;">Address: </span><span style="font-size:${fs(7.5)}px;font-weight:600;color:${D.infoFontColor};">${esc(s.address||"")}</span></div>
     </div>
     <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(135deg,${D.footerBg1},${D.footerBg2});padding:${5*sc}px ${10*sc}px;text-align:center;z-index:3;">
@@ -1079,11 +1079,11 @@ function makeBackHTML(s, w, h, canvasId) {
     <div style="padding:${1*sc}px ${12*sc}px ${1*sc}px;background:${D.bodyBg};display:flex;justify-content:center;align-items:center;position:relative;z-index:2;">
       <canvas id="${canvasId}" width="${Math.round(160*sc)}" height="${Math.round(32*sc)}" style="display:block;"></canvas>
     </div>
-    <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.4;background:${D.bodyBg};position:relative;z-index:2;">
+    <div style="padding:${2*sc}px ${12*sc}px ${3*sc}px;font-size:${fs(7.5)}px;color:${D.infoFontColor};flex:1;line-height:1.4;background:${D.bodyBg};position:relative;z-index:2;text-align:center;">
       <p style="margin:0 0 ${1*sc}px;color:#666;font-style:italic;font-size:${fs(6.5)}px;line-height:1.35;">The owner of this card is a bonafide student of <b style="color:${D.headerBg1};">${esc(schoolSettings.schoolName)}</b>, ${esc(schoolSettings.schoolAddr)}.</p>
       <div style="height:${sc}px;background:${D.borderColor}44;margin-bottom:${2*sc}px;"></div>
       <p style="margin:0 0 ${1*sc}px;font-weight:700;color:#c0392b;font-size:${fs(7)}px;">🆘 In case of emergency please notify:</p>
-      <p style="margin:0 0 ${1*sc}px;font-weight:800;font-size:${fs(8.5)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;text-align:center;">${esc(s.emergencyName||"___________________")}</p>
+      <p style="margin:0 0 ${1*sc}px;font-weight:800;font-size:${fs(8.5)}px;color:${D.headerBg1};font-family:'Montserrat',Arial,sans-serif;">${esc(s.emergencyName||"___________________")}</p>
       <p style="margin:0 0 ${1*sc}px;font-size:${fs(7.5)}px;"><span style="color:#777;font-weight:600;">Contact: </span>${esc(s.emergencyContact||"_______________")}</p>
       <p style="margin:0;font-size:${fs(7)}px;"><span style="color:#777;font-weight:600;">Address: </span>${esc(s.emergencyAddress||"_______________")}</p>
     </div>
