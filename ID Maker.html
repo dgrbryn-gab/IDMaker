@@ -242,6 +242,36 @@ html[data-theme="dark"] .theme-toggle .toggle-thumb{
   transform:translateX(16px);background:#fff;
 }
 .theme-toggle .theme-label{user-select:none;}
+
+/* ===== AUTO-SAVE INDICATOR ===== */
+.autosave-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:700;
+  font-family:'Montserrat',sans-serif;letter-spacing:.3px;
+  transition:all .3s;border:1.5px solid transparent;
+}
+.autosave-badge.saved{background:rgba(63,185,80,.1);color:var(--green);border-color:rgba(63,185,80,.3);}
+.autosave-badge.saving{background:rgba(88,166,255,.1);color:var(--accent);border-color:rgba(88,166,255,.3);}
+.autosave-badge.unsaved{background:rgba(227,179,65,.1);color:var(--gold);border-color:rgba(227,179,65,.3);}
+.autosave-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;}
+.autosave-badge.saving .autosave-dot{animation:pulse-dot .8s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+
+/* ===== SIDE-BY-SIDE PREVIEW ===== */
+.side-by-side-area{
+  background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
+  border-radius:14px;padding:16px 20px;
+  display:flex;align-items:flex-start;justify-content:center;gap:18px;
+  min-height:380px;overflow:auto;
+  box-shadow:0 0 0 1px var(--border),0 8px 32px rgba(0,0,0,.15);
+  position:relative;transition:background .25s;flex-wrap:wrap;
+}
+.side-by-side-area::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(88,166,255,.06) 0%,transparent 70%);pointer-events:none;border-radius:14px;}
+.sbs-card-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1;}
+.sbs-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);font-family:'Montserrat',sans-serif;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.2);border-radius:20px;padding:2px 10px;}
+
+/* ===== WATERMARK ===== */
+.watermark-overlay{pointer-events:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:inherit;z-index:5;}
 </style>
 </head>
 <body>
@@ -252,10 +282,13 @@ html[data-theme="dark"] .theme-toggle .toggle-thumb{
     <h1>Student ID Maker</h1>
     <p>Create and customize student ID cards in seconds!</p>
   </div>
-  <button class="theme-toggle no-print" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle dark/light mode">
-    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-    <span class="theme-label" id="theme-label">☀️ Light</span>
-  </button>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+    <span class="autosave-badge saved no-print" id="autosave-badge"><span class="autosave-dot"></span><span id="autosave-text">Saved</span></span>
+    <button class="theme-toggle no-print" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle dark/light mode" style="margin-left:0;">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="theme-label" id="theme-label">☀️ Light</span>
+    </button>
+  </div>
 </div>
 
 <div class="main">
@@ -267,7 +300,14 @@ html[data-theme="dark"] .theme-toggle .toggle-thumb{
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls" onchange="handleCSVFile(event)" style="flex:1;min-width:120px;padding:6px 8px;font-size:10px;border:1.5px solid rgba(63,185,80,.4);border-radius:6px;background:var(--surface3);cursor:pointer;color:var(--text2);">
         <button onclick="exportStudentsToCSV()" style="padding:6px 10px;font-size:10px;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--accent));color:white;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">⬇ Export CSV</button>
+        <button onclick="downloadExcelTemplate()" style="padding:6px 10px;font-size:10px;font-weight:700;background:linear-gradient(135deg,#1a7f37,#3fb950);color:white;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;" title="Download a pre-formatted Excel template">📋 Excel Template</button>
       </div>
+    </div>
+    <div style="background:rgba(57,208,216,.07);border:1.5px solid rgba(57,208,216,.3);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;line-height:1.4;">
+      <div style="font-weight:700;color:var(--cyan);margin-bottom:4px;">📸 Batch Photo Import</div>
+      <div style="color:var(--text2);margin-bottom:8px;font-size:10px;">Name photos by LRN (e.g. <b>123456789012.jpg</b>) and import all at once. Photos are matched to students by LRN.</div>
+      <input type="file" id="batch-photo-input" accept="image/*" multiple onchange="handleBatchPhotos(event)" style="width:100%;padding:6px 8px;font-size:10px;border:1.5px solid rgba(57,208,216,.4);border-radius:6px;background:var(--surface3);cursor:pointer;color:var(--text2);">
+      <div id="batch-photo-result" style="margin-top:6px;font-size:10px;color:var(--text3);"></div>
     </div>
     <div class="tabs">
       <div class="tabs-row" id="student-tabs-row" style="display:flex;flex-wrap:wrap;gap:4px;">
@@ -283,11 +323,12 @@ html[data-theme="dark"] .theme-toggle .toggle-thumb{
 
   <!-- PREVIEW PANEL -->
   <div class="preview-panel">
-    <div class="side-tabs no-print">
-      <button class="side-btn active" onclick="switchSide('front')">🪪 Front Side</button>
-      <button class="side-btn" onclick="switchSide('back')">↩ Back Side</button>
+    <div class="side-tabs no-print" style="flex-wrap:wrap;gap:5px;">
+      <button class="side-btn active" id="side-front-btn" onclick="switchSide('front')">🪪 Front</button>
+      <button class="side-btn" id="side-back-btn" onclick="switchSide('back')">↩ Back</button>
+      <button class="side-btn" id="side-both-btn" onclick="switchSide('both')" style="flex:0 0 auto;padding:9px 14px;">⧉ Both</button>
     </div>
-    <div class="carousel-wrap no-print">
+    <div class="carousel-wrap no-print" id="carousel-wrap">
       <div style="text-align:center;margin-bottom:6px;">
         <span class="carousel-counter" id="carousel-counter">Student 1 of 30</span>
       </div>
@@ -373,7 +414,11 @@ const designSettings = {
   paddingScale: 1.0,
   photoScale: 1.0,
   depedLogoScale: 1.0,
-  schoolLogoScale: 1.0
+  schoolLogoScale: 1.0,
+  watermarkEnabled: false,
+  watermarkText: "VALID",
+  watermarkOpacity: 0.08,
+  watermarkColor: "#1a5e23"
 };
 
 const PRESET_THEMES = [
@@ -459,13 +504,27 @@ const STORAGE_KEY_SCHOOL = "idmaker_school";
 const AUTO_SAVE_DELAY = 1000; // ms
 let autoSaveTimeout = null;
 
+function setAutosaveBadge(state) {
+  const badge = document.getElementById("autosave-badge");
+  const text = document.getElementById("autosave-text");
+  if (!badge || !text) return;
+  badge.className = "autosave-badge " + state;
+  if (state === "saving") text.textContent = "Saving…";
+  else if (state === "saved") text.textContent = "Saved";
+  else text.textContent = "Unsaved";
+}
+
 function autoSave() {
+  setAutosaveBadge("unsaved");
   clearTimeout(autoSaveTimeout);
   autoSaveTimeout = setTimeout(() => {
-    localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
-    localStorage.setItem(STORAGE_KEY_DESIGN, JSON.stringify(designSettings));
-    localStorage.setItem(STORAGE_KEY_SCHOOL, JSON.stringify(schoolSettings));
-    console.log("✓ Auto-saved to browser storage");
+    setAutosaveBadge("saving");
+    setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+      localStorage.setItem(STORAGE_KEY_DESIGN, JSON.stringify(designSettings));
+      localStorage.setItem(STORAGE_KEY_SCHOOL, JSON.stringify(schoolSettings));
+      setAutosaveBadge("saved");
+    }, 150);
   }, AUTO_SAVE_DELAY);
 }
 
@@ -537,11 +596,17 @@ function buildStudentTabs() {
   if (activeBtn) activeBtn.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"});
 }
 
+function scrollFormToTop() {
+  const panel = document.querySelector(".form-panel");
+  if (panel) panel.scrollTop = 0;
+}
+
 function switchTab(i) {
   activeTab = i;
   carouselIndex = i;
   buildStudentTabs();
   renderForm();
+  scrollFormToTop();
   renderCarousel();
 }
 
@@ -550,6 +615,7 @@ function switchToSchoolSettings() {
   buildStudentTabs();
   document.querySelector(".tab-settings").classList.add("active");
   renderForm();
+  scrollFormToTop();
 }
 
 function switchToDesign() {
@@ -557,11 +623,15 @@ function switchToDesign() {
   buildStudentTabs();
   document.querySelector(".tab-design").classList.add("active");
   renderForm();
+  scrollFormToTop();
 }
 
 function switchSide(side) {
   activeSide = side;
-  document.querySelectorAll(".side-btn").forEach((b,i)=>b.classList.toggle("active",(i===0&&side==="front")||(i===1&&side==="back")));
+  const btns = document.querySelectorAll(".side-btn");
+  if (btns[0]) btns[0].classList.toggle("active", side === "front");
+  if (btns[1]) btns[1].classList.toggle("active", side === "back");
+  if (btns[2]) btns[2].classList.toggle("active", side === "both");
   renderCarousel();
 }
 
@@ -681,6 +751,17 @@ function renderForm() {
     });
     html += `</div>`;
 
+    html += `<div class="section-divider" style="margin-top:12px;">💧 Watermark</div>`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;flex:1;">Enable Watermark</label>
+      <button onclick="toggleWatermark()" style="padding:4px 12px;font-size:10.5px;font-weight:700;border-radius:6px;cursor:pointer;border:1.5px solid ${designSettings.watermarkEnabled ? 'var(--purple)' : 'var(--border)'};background:${designSettings.watermarkEnabled ? 'linear-gradient(135deg,#7c3aed,var(--purple))' : 'var(--surface3)'};color:${designSettings.watermarkEnabled ? 'white' : 'var(--text2)'};">${designSettings.watermarkEnabled ? '✓ ON' : 'OFF'}</button>
+    </div>`;
+    if (designSettings.watermarkEnabled) {
+      html += `<div class="field"><label>Watermark Text</label><input type="text" value="${esc(designSettings.watermarkText||"VALID")}" placeholder="e.g. VALID, CONFIDENTIAL" oninput="setWatermark('watermarkText',this.value)" maxlength="20"></div>`;
+      html += `<div class="range-row"><label style="flex:1;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Opacity</label><input type="range" min="2" max="25" step="1" value="${Math.round((designSettings.watermarkOpacity||0.08)*100)}" oninput="setWatermark('watermarkOpacity',this.value/100);document.getElementById('wm-opacity-val').textContent=this.value+'%'" style="flex:1;accent-color:var(--purple);"><span class="range-val" id="wm-opacity-val">${Math.round((designSettings.watermarkOpacity||0.08)*100)}%</span></div>`;
+      html += `<div class="field"><label>Watermark Color</label><div style="display:flex;gap:8px;align-items:center;"><input type="color" value="${designSettings.watermarkColor||'#1a5e23'}" oninput="setWatermark('watermarkColor',this.value)" style="width:40px;height:32px;padding:2px;border:1.5px solid #ddd;border-radius:6px;cursor:pointer;"><span style="font-size:11px;color:#666;">${designSettings.watermarkColor||'#1a5e23'}</span></div></div>`;
+    }
+
     // Save Preset section
     const userPresets = loadUserPresets();
     html += `<div class="section-divider" style="margin-top:12px;">💾 Save Design Preset</div>`;
@@ -753,8 +834,10 @@ function renderForm() {
     html += `<div style="font-size:9px;color:#484f58;margin-top:5px;font-style:italic;">Permanently removes all data for every student slot.</div>`;
     html += `</div>`;
   }
+  const panel = document.querySelector(".form-panel");
+  const scrollTop = panel ? panel.scrollTop : 0;
   container.innerHTML = html;
-  document.querySelector(".form-panel").scrollTop = 0;
+  if (panel) panel.scrollTop = scrollTop;
   updateTabIndicators();
 }
 
@@ -963,6 +1046,32 @@ function copyStudentData(fromIdx, toIdx) {
   alert(`✓ Grade & Section copied from S${fromIdx+1} to S${toIdx+1}!`);
 }
 
+function getWatermarkHTML(w, h) {
+  const D = designSettings;
+  if (!D.watermarkEnabled) return "";
+  const text = (D.watermarkText || "VALID").toUpperCase();
+  const color = D.watermarkColor || "#1a5e23";
+  const opacity = D.watermarkOpacity || 0.08;
+  // Diagonal text using SVG
+  const fontSize = Math.round(w * 0.22);
+  return `<div class="watermark-overlay" style="border-radius:${9*(w/220)}px;">
+    <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+        font-size="${fontSize}" font-weight="900" fill="${color}" opacity="${opacity}"
+        font-family="Montserrat,Arial,sans-serif" letter-spacing="4"
+        transform="rotate(-35,${w/2},${h/2})">${text}</text>
+      <text x="50%" y="25%" dominant-baseline="middle" text-anchor="middle"
+        font-size="${Math.round(fontSize*0.7)}" font-weight="900" fill="${color}" opacity="${opacity*0.6}"
+        font-family="Montserrat,Arial,sans-serif" letter-spacing="4"
+        transform="rotate(-35,${w/2},${h*0.25})">${text}</text>
+      <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle"
+        font-size="${Math.round(fontSize*0.7)}" font-weight="900" fill="${color}" opacity="${opacity*0.6}"
+        font-family="Montserrat,Arial,sans-serif" letter-spacing="4"
+        transform="rotate(-35,${w/2},${h*0.75})">${text}</text>
+    </svg>
+  </div>`;
+}
+
 /* ===================== FRONT CARD ===================== */
 function makeFrontHTML(s, w, h) {
   const sc = w / 220;
@@ -996,6 +1105,7 @@ function makeFrontHTML(s, w, h) {
   return `
   <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;position:relative;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);">
     ${curveStyle}
+    ${getWatermarkHTML(w, h)}
     <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
     <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
     <div style="background:linear-gradient(135deg,${D.headerBg1} 0%,${D.headerBg2} 70%,${D.headerBg3} 100%);padding:${5*sc}px ${10*sc}px;text-align:center;position:relative;overflow:hidden;z-index:2;">
@@ -1058,6 +1168,7 @@ function makeBackHTML(s, w, h, canvasId) {
   return `
   <div style="width:${w}px;height:${h}px;background:${D.bodyBg};${patStyle}border:${2.5*sc}px solid ${D.borderColor};border-radius:${9*sc}px;overflow:hidden;display:flex;flex-direction:column;font-family:${ff};flex-shrink:0;box-shadow:0 ${6*sc}px ${18*sc}px rgba(0,0,0,.2);position:relative;">
     ${curveStyleBack}
+    ${getWatermarkHTML(w, h)}
     <div style="position:absolute;left:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
     <div style="position:absolute;right:0;top:0;bottom:0;width:${5*sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;pointer-events:none;z-index:1;"></div>
     <div style="background:linear-gradient(135deg,${D.headerBg1},${D.headerBg2},${D.headerBg3});padding:${6*sc}px ${14*sc}px;display:flex;align-items:center;gap:${8*sc}px;position:relative;z-index:2;">
@@ -1361,34 +1472,65 @@ function renderCards() {
 
 function renderCarousel() {
   const dim = getCardDimensions();
+  const carouselArea = document.getElementById("carousel-area");
   const card = document.getElementById("carousel-card");
   const counter = document.getElementById("carousel-counter");
   const dotsEl = document.getElementById("carousel-dots");
   if (!card) return;
 
-  // Clamp carouselIndex
   carouselIndex = Math.max(0, Math.min(29, carouselIndex));
-
   const s = students[carouselIndex];
-  let html = "";
-  if (activeSide === "front") {
-    html = makeFrontHTML(s, dim.w, dim.h);
-  } else {
-    html = makeBackHTML(s, dim.w, dim.h, `bc_carousel`);
-  }
-  card.innerHTML = html;
 
-  if (activeSide === "back") {
+  if (activeSide === "both") {
+    // Side-by-side mode: replace carousel-area with side-by-side layout
+    carouselArea.style.display = "none";
+    let sbsArea = document.getElementById("sbs-area");
+    if (!sbsArea) {
+      sbsArea = document.createElement("div");
+      sbsArea.id = "sbs-area";
+      sbsArea.className = "side-by-side-area";
+      carouselArea.parentNode.insertBefore(sbsArea, carouselArea);
+    }
+    sbsArea.style.display = "flex";
+    const frontHtml = makeFrontHTML(s, dim.w, dim.h);
+    const backHtml = makeBackHTML(s, dim.w, dim.h, "bc_sbs");
+    sbsArea.innerHTML = `
+      <div class="sbs-card-wrap">
+        <span class="sbs-label">🪪 Front</span>
+        ${frontHtml}
+      </div>
+      <div class="sbs-card-wrap">
+        <span class="sbs-label">↩ Back</span>
+        ${backHtml}
+      </div>`;
     setTimeout(() => {
-      const canvas = document.getElementById("bc_carousel");
-      if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+      const bc = document.getElementById("bc_sbs");
+      if (bc && s.lrn) drawBarcode(s.lrn, bc);
     }, 60);
+  } else {
+    // Normal single-side mode
+    let sbsArea = document.getElementById("sbs-area");
+    if (sbsArea) sbsArea.style.display = "none";
+    carouselArea.style.display = "";
+
+    let html = "";
+    if (activeSide === "front") {
+      html = makeFrontHTML(s, dim.w, dim.h);
+    } else {
+      html = makeBackHTML(s, dim.w, dim.h, "bc_carousel");
+    }
+    card.innerHTML = html;
+    if (activeSide === "back") {
+      setTimeout(() => {
+        const canvas = document.getElementById("bc_carousel");
+        if (canvas && s.lrn) drawBarcode(s.lrn, canvas);
+      }, 60);
+    }
   }
 
   const filledCount = students.filter(s => s.name || s.lrn).length;
   if (counter) counter.textContent = `Student ${carouselIndex + 1} of 30 · ${filledCount} filled`;
 
-  // Dots
   if (dotsEl) {
     let dotsHTML = "";
     for (let i = 0; i < 30; i++) {
@@ -1594,6 +1736,79 @@ function loadScript(src) {
     s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
+}
+
+/* ===================== BATCH PHOTO IMPORT ===================== */
+function handleBatchPhotos(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  const resultEl = document.getElementById("batch-photo-result");
+  let matched = 0, unmatched = 0;
+  let pending = files.length;
+
+  files.forEach(file => {
+    // Extract base filename without extension
+    const baseName = file.name.replace(/\.[^/.]+$/, "").trim();
+    // Try to find student by LRN match (exact or partial)
+    const idx = students.findIndex(s => s.lrn && s.lrn.trim() === baseName);
+    if (idx === -1) {
+      unmatched++;
+      pending--;
+      if (pending === 0) showBatchResult(matched, unmatched, resultEl, e.target);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      students[idx].photo = ev.target.result;
+      matched++;
+      pending--;
+      if (pending === 0) {
+        autoSave();
+        renderCards();
+        showBatchResult(matched, unmatched, resultEl, e.target);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showBatchResult(matched, unmatched, el, input) {
+  if (!el) return;
+  const total = matched + unmatched;
+  el.innerHTML = matched > 0
+    ? `<span style="color:var(--green);font-weight:700;">✓ ${matched}/${total} photos matched by LRN.</span>${unmatched > 0 ? ` <span style="color:var(--gold);">${unmatched} unmatched (filename must equal LRN).</span>` : ""}`
+    : `<span style="color:var(--red);font-weight:700;">✗ No photos matched. Rename files to match student LRN (e.g. 123456789012.jpg).</span>`;
+  if (input) input.value = "";
+}
+
+/* ===================== EXCEL TEMPLATE DOWNLOAD ===================== */
+function downloadExcelTemplate() {
+  const headers = ["Name (ALL CAPS)","LRN","Grade","Section","Sex (Male/Female)","Address","Emergency Contact Name","Emergency Contact Number","Emergency Contact Address"];
+  const example = ["DELA CRUZ, JUAN","123456789012","7","SAMPAGUITA","Male","123 Mabini St, Manila","DELA CRUZ, MARIA","09171234567","123 Mabini St, Manila"];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  // Style column widths
+  ws["!cols"] = headers.map((h,i) => ({wch: i === 0 ? 30 : i === 5 || i === 8 ? 28 : 20}));
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  const school = (schoolSettings.schoolName || "School").replace(/[^a-zA-Z0-9]/g,"_").slice(0,16);
+  XLSX.writeFile(wb, `${school}_ID_Template.xlsx`);
+}
+
+/* ===================== WATERMARK CONTROLS ===================== */
+function toggleWatermark() {
+  designSettings.watermarkEnabled = !designSettings.watermarkEnabled;
+  renderCards();
+  autoSave();
+  if (activeTab === "design") renderForm();
+}
+
+function setWatermark(key, val) {
+  designSettings[key] = val;
+  renderCards();
+  autoSave();
+  // Only re-render form for non-text keys (color, opacity) so the text input
+  // doesn't get destroyed and reset focus/scroll on every keystroke
+  if (activeTab === "design" && key !== "watermarkText") renderForm();
 }
 
 // Keyboard arrow navigation for carousel
