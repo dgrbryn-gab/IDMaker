@@ -1583,6 +1583,10 @@
         }
       }
 
+      function countFilledStudents() {
+        return students.filter(s => s.name && s.name.trim() !== "").length;
+      }
+
       function renderForm() {
         const container = document.getElementById("form-fields");
         let html = "";
@@ -1738,6 +1742,19 @@
           }
           html += `</div>`;
         } else {
+          // Status bar at the top
+          const filledCount = countFilledStudents();
+          const progressPercent = (filledCount / 30) * 100;
+          html += `<div style="background:linear-gradient(90deg,rgba(88,166,255,.08),rgba(88,166,255,.02));border:1.5px solid rgba(88,166,255,.2);border-radius:8px;padding:10px;margin-bottom:14px;">`;
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">`;
+          html += `<div style="font-size:11px;font-weight:700;color:var(--text);">📄 Progress: <span style="color:#58a6ff;">${filledCount}/30</span> Students Filled</div>`;
+          html += `<div style="font-size:9px;color:var(--text2);">${Math.round(progressPercent)}%</div>`;
+          html += `</div>`;
+          html += `<div style="width:100%;height:8px;background:rgba(88,166,255,.1);border-radius:4px;overflow:hidden;">`;
+          html += `<div style="height:100%;background:linear-gradient(90deg,#1f6feb,#58a6ff);width:${progressPercent}%;transition:width .3s ease;"></div>`;
+          html += `</div>`;
+          html += `</div>`;
+
           // Apply Grade & Section to all slots - at the top
           html += `<div class="section-divider" style="margin-bottom:10px;">📋 Apply to All Students</div>`;
           html += `<div style="background:rgba(88,166,255,.06);border:1.5px solid rgba(88,166,255,.25);border-radius:8px;padding:10px;margin-bottom:14px;">`;
