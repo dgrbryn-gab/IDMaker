@@ -1135,8 +1135,7 @@
         <div class="tip no-print">
           💡 Use <b>‹ ›</b> to browse all 30 student IDs.
           <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all IDs
-          ready to cut and laminate. <b>⚠️ Print is optimized for A3 paper</b> —
-          if using A4/Letter, choose "Fit to page" in your print dialog.
+          ready to cut and laminate. <b>✓ Print is optimized for A4 paper</b>.
         </div>
       </div>
     </div>
@@ -1739,6 +1738,18 @@
           }
           html += `</div>`;
         } else {
+          // Apply Grade & Section to all slots - at the top
+          html += `<div class="section-divider" style="margin-bottom:10px;">📋 Apply to All Students</div>`;
+          html += `<div style="background:rgba(88,166,255,.06);border:1.5px solid rgba(88,166,255,.25);border-radius:8px;padding:10px;margin-bottom:14px;">`;
+          html += `<div style="font-size:10px;color:#58a6ff;margin-bottom:10px;font-weight:700;">Set Grade & Section for all 30 ID cards:</div>`;
+          html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">`;
+          html += `<input type="text" id="global-grade-input" placeholder="Enter Grade" value="${students[activeTab].grade || ''}" style="padding:8px;border:1.5px solid rgba(88,166,255,.3);border-radius:6px;font-size:10px;background:var(--surface);color:var(--text);text-transform:uppercase;" oninput="forceUpper(this);" />`;
+          html += `<input type="text" id="global-section-input" placeholder="Enter Section" value="${students[activeTab].section || ''}" style="padding:8px;border:1.5px solid rgba(88,166,255,.3);border-radius:6px;font-size:10px;background:var(--surface);color:var(--text);text-transform:uppercase;" oninput="forceUpper(this);" />`;
+          html += `</div>`;
+          html += `<button onclick="applyGradeAndSectionToAll()" style="width:100%;padding:8px;font-size:10px;font-weight:700;background:linear-gradient(135deg,#1f6feb,#58a6ff);color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;font-family:'Montserrat',sans-serif;">✓ Apply to All 30 Students</button>`;
+          html += `<div style="font-size:9px;color:#8b949e;margin-top:6px;font-style:italic;">This will update Grade & Section for all student IDs.</div>`;
+          html += `</div>`;
+
           STUDENT_FIELDS.forEach((f) => {
             if (f.section && f.section !== lastSection) {
               html += `<div class="section-divider">${f.section === "Student Info" ? "👤" : "🆘"} ${f.section}</div>`;
@@ -1765,20 +1776,6 @@
         </div>
       </div>`;
           }
-          html += `</div>`;
-
-          // Copy data section - always visible
-          html += `<div class="section-divider" style="margin-top:14px;">📋 Copy to Other Slots</div>`;
-          html += `<div style="background:rgba(88,166,255,.06);border:1.5px solid rgba(88,166,255,.25);border-radius:8px;padding:10px;">`;
-          html += `<div style="font-size:10px;color:#58a6ff;margin-bottom:8px;font-weight:700;">Copy Grade & Section from S${activeTab + 1} to:</div>`;
-          html += `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">`;
-          for (let i = 0; i < 30; i++) {
-            if (i !== activeTab) {
-              html += `<button style="padding:5px 4px;font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#1f6feb,#58a6ff);color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;" onclick="copyStudentData(${activeTab},${i})">S${i + 1}</button>`;
-            }
-          }
-          html += `</div>`;
-          html += `<div style="font-size:9px;color:#8b949e;margin-top:6px;font-style:italic;">Only Grade & Section will be copied. Other data stays untouched.</div>`;
           html += `</div>`;
           // Clear slot button
           html += `<div class="section-divider" style="margin-top:14px;">🗑️ Reset This Slot</div>`;
@@ -2100,6 +2097,32 @@
         alert(
           `✓ Grade & Section copied from S${fromIdx + 1} to S${toIdx + 1}!`,
         );
+      }
+
+      function applyGradeAndSectionToAll() {
+        const gradeInput = document.getElementById('global-grade-input');
+        const sectionInput = document.getElementById('global-section-input');
+        
+        if (!gradeInput || !sectionInput) return;
+        
+        const grade = gradeInput.value;
+        const section = sectionInput.value;
+        
+        if (!grade || !section) {
+          alert('⚠️ Please enter both Grade and Section');
+          return;
+        }
+        
+        // Apply to all 30 students
+        for (let i = 0; i < 30; i++) {
+          students[i].grade = grade;
+          students[i].section = section;
+        }
+        
+        autoSave();
+        renderForm();
+        renderCards();
+        alert(`✓ Grade "${grade}" & Section "${section}" applied to all 30 students!`);
       }
 
       function getWatermarkHTML(w, h) {
