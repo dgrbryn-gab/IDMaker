@@ -958,7 +958,7 @@
           <div
             style="font-weight: 700; color: var(--green); margin-bottom: 6px"
           >
-            📊 Bulk Import / Export CSV
+            📊 Bulk Import CSV
           </div>
           <div style="color: var(--text2); margin-bottom: 8px; font-size: 10px">
             Load or save all students at once:
@@ -981,44 +981,8 @@
                 color: var(--text2);
               "
             />
-            <button
-              onclick="exportStudentsToCSV()"
-              style="
-                padding: 6px 10px;
-                font-size: 10px;
-                font-weight: 700;
-                background: linear-gradient(
-                  135deg,
-                  var(--accent2),
-                  var(--accent)
-                );
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                white-space: nowrap;
-              "
-            >
-              ⬇ Export CSV
-            </button>
-            <button
-              onclick="downloadExcelTemplate()"
-              style="
-                padding: 6px 10px;
-                font-size: 10px;
-                font-weight: 700;
-                background: linear-gradient(135deg, #1a7f37, #3fb950);
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                white-space: nowrap;
-              "
-              title="Download a pre-formatted Excel template"
-            >
-              📋 Excel Template
-            </button>
           </div>
+
         </div>
         <div
           style="
@@ -1059,6 +1023,40 @@
             id="batch-photo-result"
             style="margin-top: 6px; font-size: 10px; color: var(--text3)"
           ></div>
+        </div>
+        <div
+          style="
+            background: rgba(154, 102, 0, 0.07);
+            border: 1.5px solid rgba(154, 102, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            line-height: 1.4;
+          "
+        >
+          <div style="font-weight: 700; color: var(--gold); margin-bottom: 4px">
+            📋 Excel Template
+          </div>
+          <div style="color: var(--text2); margin-bottom: 8px; font-size: 10px">
+            Download a pre-formatted Excel template to use as a reference for importing student data.
+          </div>
+          <button
+            onclick="downloadExcelTemplate()"
+            style="
+              width: 100%;
+              padding: 8px 12px;
+              font-size: 10px;
+              font-weight: 700;
+              background: linear-gradient(135deg, #1a7f37, #3fb950);
+              color: white;
+              border: none;
+              border-radius: 6px;
+              cursor: pointer;
+            "
+          >
+            📥 Download Excel Template
+          </button>
         </div>
         <div class="tabs">
           <div
@@ -1326,15 +1324,15 @@
       ];
 
       const CARD_SIZES = [
-        { label: "Extra Small (3.2×6cm)", scale: 0.65, w: 156, h: 292 },
-        { label: "Small (4.1×7.5cm)", scale: 0.75, w: 180, h: 270 },
-        { label: "Small-Medium (4.8×9cm)", scale: 0.9, w: 216, h: 342 },
+        { label: "Extra Small (3.2×6cm)", scale: 0.65, w: 121, h: 227 },
+        { label: "Small (4.1×7.5cm)", scale: 0.75, w: 155, h: 284 },
+        { label: "Small-Medium (4.8×9cm)", scale: 0.9, w: 182, h: 341 },
         { label: "Medium (5.5×10cm)", scale: 1.0, w: 208, h: 378 },
-        { label: "Medium-Large (6×11cm)", scale: 1.1, w: 264, h: 417 },
-        { label: "Large (6.2×11.7cm)", scale: 1.2, w: 312, h: 468 },
-        { label: "XL (7.2×13.7cm)", scale: 1.4, w: 364, h: 546 },
-        { label: "XXL (8.2×15.6cm)", scale: 1.6, w: 416, h: 624 },
-        { label: "XXXL (9.2×17.5cm)", scale: 1.8, w: 468, h: 702 },
+        { label: "Medium-Large (7×10.5cm)", scale: 1.1, w: 265, h: 397 },
+        { label: "Large (7.5×11.5cm)", scale: 1.2, w: 284, h: 435 },
+        { label: "XL (8.2×13cm)", scale: 1.4, w: 310, h: 492 },
+        { label: "XXL (9×15cm)", scale: 1.6, w: 341, h: 568 },
+        { label: "XXXL (10×17cm)", scale: 1.8, w: 379, h: 644 },
       ];
 
       const STUDENT_FIELDS = [
@@ -1948,22 +1946,26 @@
           "homeaddress",
         ]);
         const emergencyNameIdx = guessColumnIndex(headers, [
-          "emergency",
           "emergency name",
           "emergencyname",
+          "emergency",
           "guardian",
           "parent",
         ]);
         const emergencyContactIdx = guessColumnIndex(headers, [
-          "contact",
+          "contact number",
           "phone",
+          "contact",
           "emergency contact",
           "emergencycontact",
           "mobile",
         ]);
         const emergencyAddressIdx = guessColumnIndex(headers, [
+          "emergency contact address",
+          "emergencycontactaddress",
           "emergency address",
           "emergencyaddress",
+          "contact address",
           "guardian address",
         ]);
 
@@ -2027,46 +2029,6 @@
           };
           reader.readAsText(file);
         }
-      }
-
-      function exportStudentsToCSV() {
-        const headers = [
-          "Name",
-          "LRN",
-          "Grade",
-          "Section",
-          "Gender",
-          "Address",
-          "Emergency Name",
-          "Emergency Contact",
-          "Emergency Address",
-        ];
-        const rows = students.map((s) =>
-          [
-            s.name || "",
-            s.lrn || "",
-            s.grade || "",
-            s.section || "",
-            s.gender || "",
-            s.address || "",
-            s.emergencyName || "",
-            s.emergencyContact || "",
-            s.emergencyAddress || "",
-          ]
-            .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-            .join(","),
-        );
-        const csv = [headers.join(","), ...rows].join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        const school = (schoolSettings.schoolName || "Students")
-          .replace(/[^a-zA-Z0-9]/g, "_")
-          .slice(0, 20);
-        a.download = school + "_ID_Data.csv";
-        a.click();
-        URL.revokeObjectURL(url);
       }
 
       function handleCSVPaste(text) {
