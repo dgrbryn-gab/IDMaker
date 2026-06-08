@@ -999,8 +999,7 @@
             📸 Batch Photo Import
           </div>
           <div style="color: var(--text2); margin-bottom: 8px; font-size: 10px">
-            Name photos by LRN (e.g. <b>123456789012.jpg</b>) and import all at
-            once. Photos are matched to students by LRN.
+            Name photos by <b>student's full name</b> (e.g. <b>DELA CRUZ, JUAN.jpg</b>) <i>or</i> by <b>row number</b> (e.g. <b>1.jpg</b>, <b>2.jpg</b>…). Number matching follows the order of students in your list.
           </div>
           <input
             type="file"
@@ -2273,9 +2272,9 @@
           .filter((x) => x);
         const rows = sysArray
           .map(
-            (sy) => `
+            (sy, idx) => `
     <tr>
-      <td style="padding:${15 * sc}px ${8 * sc}px;border:${sc}px solid ${D.borderColor}44;"></td>
+      <td style="padding:${2 * sc}px ${8 * sc}px;border:${sc}px solid ${D.borderColor}44;text-align:center;vertical-align:middle;"><span style="font-size:${fs(14)}px;font-weight:800;color:${idx === 0 ? D.headerBg1 : 'transparent'};">${idx === 0 ? 'S.Y. 2026-2027' : '&nbsp;'}</span></td>
     </tr>`,
           )
           .join("");
@@ -3227,42 +3226,95 @@
           unmatched = 0;
         let pending = files.length;
 
+        // Normalize a name string for flexible comparison
+        function normalizeName(n) {
+          return n.trim().toUpperCase().replace(/,/g, " ").replace(/\s+/g, " ").trim();
+        }
+        // Convert "FIRSTNAME LASTNAME" or "FIRSTNAME MIDDLE LASTNAME" to
+        // a token-sorted key so order doesn't matter
+        function tokenSort(n) {
+          return normalizeName(n).split(" ").sort().join(" ");
+        }
+        // Try to match a filename against a student name using 3 strategies
+        function findStudentByName(baseName) {
+          const fileNorm = normalizeName(baseName);
+          const fileTokens = tokenSort(baseName);
+          return students.findIndex((s) => {
+            if (!s.name) return false;
+            const studentNorm = normalizeName(s.name);
+            // 1. Exact match (after stripping commas/extra spaces)
+            if (studentNorm === fileNorm) return true;
+            // 2. Token sort — order-independent match
+            if (tokenSort(s.name) === fileTokens) return true;
+            // 3. "FIRSTNAME LASTNAME" vs "LASTNAME, FIRSTNAME" conversion
+            if (s.name.includes(",")) {
+              const parts = s.name.split(",");
+              const flipped = normalizeName(parts.slice(1).join(" ") + " " + parts[0]);
+              if (flipped === fileNorm) return true;
+            }
+            return false;
+          });
+        }
+        // Try to match a filename as a 1-based row number
+        function findStudentByNumber(baseName) {
+          const num = parseInt(baseName.trim(), 10);
+          if (isNaN(num) || num < 1 || num > students.length) return -1;
+          // Only match if the entire filename is a number (no extra text)
+          if (String(num) !== baseName.trim()) return -1;
+          return num - 1; // convert to 0-based index
+        }
+
+        // Track how each file was matched for the result summary
+        let matchedByName = 0, matchedByNumber = 0;
+
         files.forEach((file) => {
           // Extract base filename without extension
           const baseName = file.name.replace(/\.[^/.]+$/, "").trim();
-          // Try to find student by LRN match (exact or partial)
-          const idx = students.findIndex(
-            (s) => s.lrn && s.lrn.trim() === baseName,
-          );
+          // Strategy 1: try name match
+          let idx = findStudentByName(baseName);
+          let matchType = "name";
+          // Strategy 2: fall back to row number
+          if (idx === -1) {
+            idx = findStudentByNumber(baseName);
+            matchType = "number";
+          }
           if (idx === -1) {
             unmatched++;
             pending--;
             if (pending === 0)
-              showBatchResult(matched, unmatched, resultEl, e.target);
+              showBatchResult(matched, unmatched, matchedByName, matchedByNumber, resultEl, e.target);
             return;
           }
           const reader = new FileReader();
           reader.onload = (ev) => {
             students[idx].photo = ev.target.result;
             matched++;
+            if (matchType === "name") matchedByName++; else matchedByNumber++;
             pending--;
             if (pending === 0) {
               autoSave();
               renderCards();
-              showBatchResult(matched, unmatched, resultEl, e.target);
+              showBatchResult(matched, unmatched, matchedByName, matchedByNumber, resultEl, e.target);
             }
           };
           reader.readAsDataURL(file);
         });
       }
 
-      function showBatchResult(matched, unmatched, el, input) {
+      function showBatchResult(matched, unmatched, byName, byNumber, el, input) {
         if (!el) return;
         const total = matched + unmatched;
+        let detail = "";
+        if (matched > 0) {
+          const parts = [];
+          if (byName > 0) parts.push(`${byName} by name`);
+          if (byNumber > 0) parts.push(`${byNumber} by number`);
+          detail = ` <span style="color:var(--text3);font-size:9.5px;">(${parts.join(", ")})</span>`;
+        }
         el.innerHTML =
           matched > 0
-            ? `<span style="color:var(--green);font-weight:700;">✓ ${matched}/${total} photos matched by LRN.</span>${unmatched > 0 ? ` <span style="color:var(--gold);">${unmatched} unmatched (filename must equal LRN).</span>` : ""}`
-            : `<span style="color:var(--red);font-weight:700;">✗ No photos matched. Rename files to match student LRN (e.g. 123456789012.jpg).</span>`;
+            ? `<span style="color:var(--green);font-weight:700;">✓ ${matched}/${total} photos matched.</span>${detail}${unmatched > 0 ? ` <span style="color:var(--gold);">${unmatched} unmatched.</span>` : ""}`
+            : `<span style="color:var(--red);font-weight:700;">✗ No photos matched. Use student full name (e.g. DELA CRUZ, JUAN.jpg) or row number (e.g. 1.jpg).</span>`;
         if (input) input.value = "";
       }
 
