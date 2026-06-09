@@ -695,9 +695,7 @@
       /* ===== PRINT ===== */
       @page {
         size: A4;
-        margin: 8mm;
-        margin-top: 6mm;
-        margin-bottom: 6mm;
+        margin: 0;
       }
       @media print {
         * {
@@ -706,30 +704,36 @@
           -webkit-margin-before: 0 !important;
           -webkit-margin-after: 0 !important;
         }
-        .no-print {
-          display: none !important;
-        }
-        .header {
-          display: none !important;
-        }
+        .no-print { display: none !important; }
+        .header   { display: none !important; }
         body {
           background: white !important;
-          padding: 0;
-          margin: 0;
+          padding: 0 !important;
+          margin: 0 !important;
         }
-        .print-layout {
-          display: block !important;
-        }
+        .print-layout { display: block !important; }
+
+        /* CENTERED DUPLEX ALIGNMENT
+           Both front and back pages use identical equal margins on all sides.
+           The inner grid uses margin:auto to center — this is the most reliable
+           centering method across all browsers and print engines. */
         .print-page {
           box-sizing: border-box;
           page-break-after: always;
           page-break-inside: avoid;
-          padding: 8mm 10mm;
           width: 210mm;
+          min-height: 297mm;
+          display: block;
+          padding: 15mm;
         }
-        .print-page:last-child {
-          page-break-after: auto;
+        .print-page-back {
+          padding: 15mm;
         }
+        .print-page .card-grid {
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .print-page:last-child { page-break-after: auto; }
       }
       .print-layout {
         display: none;
@@ -1137,7 +1141,11 @@
         <div class="tip no-print">
           💡 Use <b>‹ ›</b> to browse all 50 student IDs.
           <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all IDs
-          ready to cut and laminate. <b>✓ Print is optimized for A4 paper</b>.
+          ready to cut and laminate. <b>✓ Print is optimized for A4 paper</b>.<br><br>
+          🖨️ <b>For double-sided printing:</b> Front pages print first (cards on the LEFT), back pages after (cards on the RIGHT).
+          Flip on the <b>long edge</b> when printing page 2 — the front's 1-inch left margin will align with the back's 1-inch right margin.
+          In your printer dialog, choose <b>"Flip on Long Edge"</b> or <b>"Long-Edge Binding"</b>.
+        </div>
         </div>
       </div>
     </div>
@@ -2219,41 +2227,41 @@
 
         const curveStyle = getCurveDesign(sc, D);
         return `
-  <div style="width:${w}px;height:${h}px;${bodyBgStyle}${patStyle}border:${2.5 * sc}px solid ${D.borderColor};border-radius:${9 * sc}px;overflow:hidden;position:relative;font-family:${ff};flex-shrink:0;box-shadow:0 ${6 * sc}px ${18 * sc}px rgba(0,0,0,.2);">
+  <div style="width:${w}px;height:${h}px;${bodyBgStyle}${patStyle}border:${2.5 * sc}px solid ${D.borderColor};border-radius:${9 * sc}px;overflow:hidden;position:relative;font-family:${ff};flex-shrink:0;box-shadow:0 ${6 * sc}px ${18 * sc}px rgba(0,0,0,.2);display:flex;flex-direction:column;">
     ${curveStyle}
     ${getWatermarkHTML(w, h)}
-    <div style="position:absolute;left:0;top:0;bottom:0;width:${5 * sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
-    <div style="position:absolute;right:0;top:0;bottom:0;width:${5 * sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;"></div>
-    <div style="background:linear-gradient(135deg,${D.headerBg1} 0%,${D.headerBg2} 70%,${D.headerBg3} 100%);padding:${5 * sc}px ${10 * sc}px;text-align:center;position:relative;overflow:hidden;z-index:2;">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:${5 * sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;pointer-events:none;"></div>
+    <div style="position:absolute;right:0;top:0;bottom:0;width:${5 * sc}px;background:linear-gradient(180deg,${D.accentColor},${D.accentColor} 50%,${D.headerBg1});opacity:.6;z-index:1;pointer-events:none;"></div>
+    <div style="background:linear-gradient(135deg,${D.headerBg1} 0%,${D.headerBg2} 70%,${D.headerBg3} 100%);padding:${5 * sc}px ${10 * sc}px;text-align:center;position:relative;overflow:hidden;z-index:2;flex-shrink:0;">
       <div style="position:absolute;top:0;left:0;right:0;height:${3 * sc}px;background:linear-gradient(90deg,transparent,${D.accentColor},transparent);"></div>
       <div style="color:${D.headerTextColor};font-weight:900;font-size:${fs(8.5)}px;line-height:1.3;letter-spacing:.3px;font-family:'Montserrat',Arial,sans-serif;">${schoolSettings.schoolName}</div>
       <div style="color:rgba(255,255,255,.9);font-size:${fs(7)}px;margin-top:${1 * sc}px;font-style:italic;">${schoolSettings.schoolAddr}</div>
     </div>
-    <div style="display:flex;padding:${7 * sc}px ${10 * sc}px ${5 * sc}px;gap:${8 * sc}px;position:relative;z-index:2;">
+    <div style="display:flex;padding:${7 * sc}px ${10 * sc}px ${5 * sc}px;gap:${8 * sc}px;position:relative;z-index:2;flex-shrink:0;">
       <div style="width:${70 * sc * (designSettings.photoScale || 1.0)}px;height:${78 * sc * (designSettings.photoScale || 1.0)}px;border:${2 * sc}px solid ${D.borderColor}44;border-radius:${5 * sc}px;overflow:hidden;flex-shrink:0;background:#f1f8e9;box-shadow:0 ${2 * sc}px ${6 * sc}px rgba(0,0,0,.12);">${photoContent}</div>
       <div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:${5 * sc}px;padding-top:${2 * sc}px;">${depedContent}${sealContent}</div>
     </div>
-    <div style="margin:0 ${10 * sc}px;padding:${3 * sc}px ${6 * sc}px;background:${D.headerBg1}18;border-radius:${4 * sc}px;border:${sc}px solid ${D.borderColor}44;font-size:${fs(7.5)}px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;">
+    <div style="margin:0 ${10 * sc}px;padding:${3 * sc}px ${6 * sc}px;background:${D.headerBg1}18;border-radius:${4 * sc}px;border:${sc}px solid ${D.borderColor}44;font-size:${fs(7.5)}px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;flex-shrink:0;">
       <span><span style="color:#777;">LRN: </span><b style="color:${D.headerBg1};">${esc(s.lrn || "____________")}</b></span>
       <span><span style="color:#777;">School ID: </span><b style="color:${D.headerBg1};">${schoolSettings.schoolId}</b></span>
     </div>
-    <div style="text-align:center;font-weight:900;font-size:${fsName(11.5)}px;padding:${4 * sc}px ${10 * sc}px ${3 * sc}px;color:${D.nameFontColor};letter-spacing:.3px;font-family:'Montserrat',Arial,sans-serif;position:relative;z-index:2;">${esc(s.name || "STUDENT FULL NAME")}</div>
-    <div style="height:${1.5 * sc}px;margin:0 ${10 * sc}px;background:linear-gradient(90deg,transparent,${D.borderColor}44,transparent);position:relative;z-index:2;"></div>
-    <div style="display:flex;padding:${4 * sc}px ${10 * sc}px;gap:${8 * sc}px;position:relative;z-index:2;">
+    <div style="text-align:center;font-weight:900;font-size:${fsName(11.5)}px;padding:${4 * sc}px ${10 * sc}px ${3 * sc}px;color:${D.nameFontColor};letter-spacing:.3px;font-family:'Montserrat',Arial,sans-serif;position:relative;z-index:2;flex-shrink:0;">${esc(s.name || "STUDENT FULL NAME")}</div>
+    <div style="height:${1.5 * sc}px;margin:0 ${10 * sc}px;background:linear-gradient(90deg,transparent,${D.borderColor}44,transparent);position:relative;z-index:2;flex-shrink:0;"></div>
+    <div style="display:flex;padding:${2 * sc}px ${10 * sc}px ${2 * sc}px;gap:${8 * sc}px;position:relative;z-index:2;flex-shrink:0;">
       <div style="flex:1;font-size:${fs(8)}px;">
-        <div style="color:#777;font-weight:600;margin-bottom:${2 * sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;text-align:center;">Grade</div>
-        <div style="border:${1.5 * sc}px solid ${D.borderColor}66;height:${20 * sc}px;border-radius:${4 * sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};text-align:center;">${esc(s.grade || "")}</div>
+        <div style="color:#777;font-weight:600;margin-bottom:${1 * sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;text-align:center;">Grade</div>
+        <div style="border:${1.5 * sc}px solid ${D.borderColor}66;height:${18 * sc}px;border-radius:${4 * sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};text-align:center;">${esc(s.grade || "")}</div>
       </div>
       <div style="flex:1;font-size:${fs(8)}px;">
-        <div style="color:#777;font-weight:600;margin-bottom:${2 * sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;text-align:center;">Section</div>
-        <div style="border:${1.5 * sc}px solid ${D.borderColor}66;height:${20 * sc}px;border-radius:${4 * sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};text-align:center;">${esc(s.section || "")}</div>
+        <div style="color:#777;font-weight:600;margin-bottom:${1 * sc}px;text-transform:uppercase;letter-spacing:.3px;font-size:${fs(7)}px;text-align:center;">Section</div>
+        <div style="border:${1.5 * sc}px solid ${D.borderColor}66;height:${18 * sc}px;border-radius:${4 * sc}px;background:${D.headerBg1}0d;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs(9)}px;color:${D.headerBg1};text-align:center;">${esc(s.section || "")}</div>
       </div>
     </div>
-    <div style="padding:0 ${10 * sc}px ${4 * sc}px;font-size:${fs(8)}px;position:relative;z-index:2;">
-      <div style="margin-bottom:${2 * sc}px;"><span style="color:#777;font-weight:600;">Sex: </span><b style="color:${D.infoFontColor};">${esc(s.gender || "")}</b></div>
-      <div><span style="color:#777;font-weight:600;">Address: </span><span style="font-size:${fs(7.5)}px;font-weight:600;color:${D.infoFontColor};">${esc(s.address || "")}</span></div>
+    <div style="padding:${2 * sc}px ${10 * sc}px ${2 * sc}px;font-size:${fs(8)}px;position:relative;z-index:2;flex:1;overflow:hidden;">
+      <div style="margin-bottom:${1 * sc}px;"><span style="color:#777;font-weight:600;">Sex: </span><b style="color:${D.infoFontColor};">${esc(s.gender || "")}</b></div>
+      <div style="word-break:break-word;white-space:normal;line-height:1.3;"><span style="color:#777;font-weight:600;">Address: </span><span style="font-size:${fs(7.5)}px;font-weight:600;color:${D.infoFontColor};">${esc(s.address || "")}</span></div>
     </div>
-    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(135deg,${D.footerBg1},${D.footerBg2});padding:${5 * sc}px ${10 * sc}px;text-align:center;z-index:3;">
+    <div style="background:linear-gradient(135deg,${D.footerBg1},${D.footerBg2});padding:${5 * sc}px ${10 * sc}px;text-align:center;z-index:3;position:relative;flex-shrink:0;">
       <div style="position:absolute;top:0;left:0;right:0;height:${2.5 * sc}px;background:linear-gradient(90deg,transparent,${D.accentColor},transparent);"></div>
       ${sigContent}
       <div style="color:white;font-weight:800;font-size:${fs(8.5)}px;letter-spacing:.2px;font-family:'Montserrat',Arial,sans-serif;">${schoolSettings.principal}</div>
@@ -3021,30 +3029,46 @@
 
         const scale = designSettings.cardScale || 1.0;
         const cols = getPrintGridCols(scale);
+
+        const GAP = 8; // px between cards
+
+        // CENTERED DUPLEX ALIGNMENT:
+        // Both front and back pages use equal 15mm padding on all sides.
+        // The inner .card-grid has an explicit pixel width so margin:auto centers it.
+        // margin:auto is the most reliable print centering — works in all browsers.
+        const gridW = cols * dim.w + (cols - 1) * GAP;
+        const gridStyle = `display:grid;grid-template-columns:repeat(${cols},${dim.w}px);gap:${GAP}px;width:${gridW}px;margin-left:auto;margin-right:auto;`;
+
         let html = "";
 
-        // ── FRONT pages ──
+        // -- FRONT pages --
         frontPages.forEach((group) => {
-          html += `<div class="print-page" style="display:grid;grid-template-columns:repeat(${cols},${dim.w}px);gap:8px;justify-content:center;align-items:start;">`;
-          group.forEach((i) => {
-            html += `<div>${makeFrontHTML(students[i], dim.w, dim.h)}</div>`;
-          });
-          html += `</div>`;
-        });
-
-        // ── BACK pages (horizontally mirrored per row for duplex alignment) ──
-        backPages.forEach((group, pageIdx) => {
-          const mirrored = mirrorGroupForDuplex(group, cols);
-          html += `<div class="print-page" style="display:grid;grid-template-columns:repeat(${cols},${dim.w}px);gap:8px;justify-content:center;align-items:start;">`;
-          mirrored.forEach((i) => {
+          const padded = [...group];
+          while (padded.length % cols !== 0) padded.push(null);
+          html += `<div class="print-page"><div class="card-grid" style="${gridStyle}">`;
+          padded.forEach((i) => {
             if (i === null) {
-              // Empty placeholder to preserve grid column position
               html += `<div style="width:${dim.w}px;height:${dim.h}px;"></div>`;
             } else {
-              html += `<div>${makeBackHTML(students[i], dim.w, dim.h, `bc_print_${pageIdx}_${i}`)}</div>`;
+              html += `<div style="width:${dim.w}px;height:${dim.h}px;">${makeFrontHTML(students[i], dim.w, dim.h)}</div>`;
             }
           });
-          html += `</div>`;
+          html += `</div></div>`;
+        });
+
+        // -- BACK pages (same card order as front — centering makes mirroring unnecessary) --
+        backPages.forEach((group, pageIdx) => {
+          const padded = [...group];
+          while (padded.length % cols !== 0) padded.push(null);
+          html += `<div class="print-page print-page-back"><div class="card-grid" style="${gridStyle}">`;
+          padded.forEach((i) => {
+            if (i === null) {
+              html += `<div style="width:${dim.w}px;height:${dim.h}px;"></div>`;
+            } else {
+              html += `<div style="width:${dim.w}px;height:${dim.h}px;">${makeBackHTML(students[i], dim.w, dim.h, `bc_print_${pageIdx}_${i}`)}</div>`;
+            }
+          });
+          html += `</div></div>`;
         });
 
         container.innerHTML = html;
@@ -3052,8 +3076,9 @@
         setTimeout(() => {
           const qrSize = Math.round((48 * dim.w) / 220);
           backPages.forEach((group, pageIdx) => {
-            const mirrored = mirrorGroupForDuplex(group, cols);
-            mirrored.forEach((i) => {
+            const padded = [...group];
+            while (padded.length % cols !== 0) padded.push(null);
+            padded.forEach((i) => {
               if (i !== null && students[i].lrn)
                 drawCode(students[i].lrn, `bc_print_${pageIdx}_${i}`, qrSize);
             });
@@ -3099,46 +3124,39 @@
           // Grid columns by card scale — must match getPrintGridCols() exactly
           function getGridCols(scale) {
             scale = scale || designSettings.cardScale || 1.0;
-            if (scale >= 1.75) return 1;  // XXXL: 1×1
-            if (scale >= 1.3)  return 2;  // XL/XXL: 2×1
-            if (scale >= 1.08) return 2;  // L/ML: 2×2
-            if (scale >= 0.82) return 3;  // M/SM: 3×2
-            if (scale >= 0.7)  return 4;  // S: 4×3
-            return 5;                      // XS: 5×4
-          }
-
-          // Mirror each row horizontally so back cards align with fronts after long-edge flip.
-          // Partial last rows are padded then reversed — null entries are empty grid placeholders.
-          function mirrorForDuplex(group, cols) {
-            const out = [];
-            for (let r = 0; r < group.length; r += cols) {
-              const slice = group.slice(r, r + cols);
-              if (slice.length === cols) {
-                out.push(...slice.reverse());
-              } else {
-                const padded = [...slice, ...Array(cols - slice.length).fill(null)];
-                out.push(...padded.reverse());
-              }
-            }
-            return out;
+            if (scale >= 1.75) return 1;
+            if (scale >= 1.3)  return 2;
+            if (scale >= 1.08) return 2;
+            if (scale >= 0.82) return 3;
+            if (scale >= 0.7)  return 4;
+            return 5;
           }
 
           const pdfCols = getGridCols(designSettings.cardScale || 1.0);
+          // A4 at 96dpi ≈ 794×1123px. 15mm margin = ~57px on all sides.
+          const PDF_PAD = 57; // px — equal on all sides, matches print layout
+          const PDF_W = 794;
 
           async function renderPageGroup(group, isFront, pageIndex) {
-            // For back pages, mirror the order so cards align after flipping the sheet
-            const orderedGroup = isFront ? group : mirrorForDuplex(group, pdfCols);
+            const padded = [...group];
+            while (padded.length % pdfCols !== 0) padded.push(null);
+
             const container = document.createElement("div");
+            // Full A4 page width, equal padding on all sides — identical for front and back.
             container.style.cssText =
-              "position:fixed;left:-9999px;top:0;width:794px;background:white;padding:30px 36px;font-family:Open Sans,Arial,sans-serif;display:flex;justify-content:center;";
-            let inner = `<div style="display:grid;grid-template-columns:repeat(${pdfCols},${dim.w}px);gap:16px;justify-items:center;align-items:start;">`;
-            orderedGroup.forEach((i) => {
+              `position:fixed;left:-9999px;top:0;width:${PDF_W}px;background:white;` +
+              `padding:${PDF_PAD}px;font-family:Open Sans,Arial,sans-serif;`;
+
+            // Grid width is explicit so margin:auto centers it — same approach as print layout.
+            const gridW = pdfCols * dim.w + (pdfCols - 1) * 8;
+            let inner = `<div style="display:grid;grid-template-columns:repeat(${pdfCols},${dim.w}px);gap:8px;width:${gridW}px;margin-left:auto;margin-right:auto;">`;
+            padded.forEach((i) => {
               if (i === null) {
                 inner += `<div style="width:${dim.w}px;height:${dim.h}px;"></div>`;
               } else if (isFront) {
-                inner += `<div>${makeFrontHTML(students[i], dim.w, dim.h)}</div>`;
+                inner += `<div style="width:${dim.w}px;height:${dim.h}px;">${makeFrontHTML(students[i], dim.w, dim.h)}</div>`;
               } else {
-                inner += `<div>${makeBackHTML(students[i], dim.w, dim.h, `bc_pdf_p${pageIndex}_${i}`)}</div>`;
+                inner += `<div style="width:${dim.w}px;height:${dim.h}px;">${makeBackHTML(students[i], dim.w, dim.h, `bc_pdf_p${pageIndex}_${i}`)}</div>`;
               }
             });
             inner += `</div>`;
@@ -3149,13 +3167,9 @@
 
             if (!isFront) {
               const qrSize = Math.round((48 * dim.w) / 220);
-              orderedGroup.forEach((i) => {
-                if (i !== null && students[i].lrn)
-                  drawCode(
-                    students[i].lrn,
-                    `bc_pdf_p${pageIndex}_${i}`,
-                    qrSize,
-                  );
+              padded.forEach((i) => {
+                if (i !== null && students[i] && students[i].lrn)
+                  drawCode(students[i].lrn, `bc_pdf_p${pageIndex}_${i}`, qrSize);
               });
               await new Promise((r) => setTimeout(r, 200));
             }
