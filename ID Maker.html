@@ -1142,9 +1142,9 @@
           💡 Use <b>‹ ›</b> to browse all 50 student IDs.
           <b>LRN</b> auto-generates barcode. <b>Export PDF</b> prints all IDs
           ready to cut and laminate. <b>✓ Print is optimized for A4 paper</b>.<br><br>
-          🖨️ <b>For double-sided printing:</b> Front pages print first (cards on the LEFT), back pages after (cards on the RIGHT).
-          Flip on the <b>long edge</b> when printing page 2 — the front's 1-inch left margin will align with the back's 1-inch right margin.
-          In your printer dialog, choose <b>"Flip on Long Edge"</b> or <b>"Long-Edge Binding"</b>.
+          🖨️ <b>For double-sided printing:</b> Print all <b>front pages first</b>, then reinsert the paper and print the <b>back pages</b>.<br>
+          The back page layout is automatically <b>mirror-reversed per row</b> so each back card aligns perfectly behind its matching front card after a <b>long-edge (left-side) flip</b>.<br>
+          In your printer dialog, choose <b>"Flip on Long Edge"</b> or <b>"Long-Edge Binding"</b> — or simply flip the paper yourself before reinserting it.
         </div>
         </div>
       </div>
@@ -3056,12 +3056,15 @@
           html += `</div></div>`;
         });
 
-        // -- BACK pages (same card order as front — centering makes mirroring unnecessary) --
+        // -- BACK pages (row-mirrored for long-edge duplex flip alignment) --
+        // Each row of back cards is reversed so that after flipping the paper on the
+        // long (left) edge, every back card lands exactly behind its matching front card.
         backPages.forEach((group, pageIdx) => {
           const padded = [...group];
           while (padded.length % cols !== 0) padded.push(null);
+          const mirrored = mirrorGroupForDuplex(padded, cols);
           html += `<div class="print-page print-page-back"><div class="card-grid" style="${gridStyle}">`;
-          padded.forEach((i) => {
+          mirrored.forEach((i) => {
             if (i === null) {
               html += `<div style="width:${dim.w}px;height:${dim.h}px;"></div>`;
             } else {
@@ -3078,7 +3081,9 @@
           backPages.forEach((group, pageIdx) => {
             const padded = [...group];
             while (padded.length % cols !== 0) padded.push(null);
-            padded.forEach((i) => {
+            // Use mirrored order to match the rendered element IDs
+            const mirrored = mirrorGroupForDuplex(padded, cols);
+            mirrored.forEach((i) => {
               if (i !== null && students[i].lrn)
                 drawCode(students[i].lrn, `bc_print_${pageIdx}_${i}`, qrSize);
             });
@@ -3140,6 +3145,8 @@
           async function renderPageGroup(group, isFront, pageIndex) {
             const padded = [...group];
             while (padded.length % pdfCols !== 0) padded.push(null);
+            // For back pages, mirror each row so cards align behind their fronts on a long-edge flip.
+            const ordered = isFront ? padded : mirrorGroupForDuplex(padded, pdfCols);
 
             const container = document.createElement("div");
             // Full A4 page width, equal padding on all sides — identical for front and back.
@@ -3150,7 +3157,7 @@
             // Grid width is explicit so margin:auto centers it — same approach as print layout.
             const gridW = pdfCols * dim.w + (pdfCols - 1) * 8;
             let inner = `<div style="display:grid;grid-template-columns:repeat(${pdfCols},${dim.w}px);gap:8px;width:${gridW}px;margin-left:auto;margin-right:auto;">`;
-            padded.forEach((i) => {
+            ordered.forEach((i) => {
               if (i === null) {
                 inner += `<div style="width:${dim.w}px;height:${dim.h}px;"></div>`;
               } else if (isFront) {
@@ -3167,7 +3174,7 @@
 
             if (!isFront) {
               const qrSize = Math.round((48 * dim.w) / 220);
-              padded.forEach((i) => {
+              ordered.forEach((i) => {
                 if (i !== null && students[i] && students[i].lrn)
                   drawCode(students[i].lrn, `bc_pdf_p${pageIndex}_${i}`, qrSize);
               });
